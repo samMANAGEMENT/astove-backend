@@ -21,3 +21,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/crear-entidad', 'App\modules\entidades\controller\entidadesController@crearEntidad');
 
 Route::get('/listar-entidades', 'App\modules\entidades\controller\entidadesController@listarEntidades');
+
+Route::post('/crear-empleado', 'App\modules\empleados\controller\empleadosController@crearEmpleado');
+
+Route::get('/listar-empleados', 'App\modules\empleados\controller\empleadosController@listarEmpleados');
