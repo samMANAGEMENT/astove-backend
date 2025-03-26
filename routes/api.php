@@ -15,22 +15,15 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-//Rutas de Sanctum protegidas
-
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+//Rutas de Sanctum protegidas (con login)
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+
+    require __DIR__ . '/entidad/entidad.php';
 });
-
-Route::post('/crear-entidad', 'App\modules\entidades\controller\entidadesController@crearEntidad');
-
-Route::get('/listar-entidades', 'App\modules\entidades\controller\entidadesController@listarEntidades');
-
-Route::post('/crear-empleado', 'App\modules\empleados\controller\empleadosController@crearEmpleado');
-
-Route::get('/listar-empleados', 'App\modules\empleados\controller\empleadosController@listarEmpleados');
