@@ -16,4 +16,14 @@ class EntidadesService
     {
         return Entidades::get();
     }
+
+    public function actualizarEntidad(array $data, $id)
+    {
+        return Entidades::findOrFail($id)->where('id', $id)->update($data);
+    }
+
+    public function modificarEstado(int $id, $data)
+    {
+        return Entidades::findOrFail($id)->update($data);
+    }
 }

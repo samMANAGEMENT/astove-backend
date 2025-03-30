@@ -1,0 +1,45 @@
+<?php
+
+namespace App\Http\Modules\Cargos\controller;
+
+use App\Http\Controllers\Controller;
+use App\Http\Modules\Cargos\service\cargoService;
+use Illuminate\Http\Request;
+
+class cargoController extends Controller
+{
+
+    public function __construct(private cargoService $cargoService)
+    {
+    }
+
+    public function crearCargo(Request $data)
+    {
+        try {
+            $cargo = $this->cargoService->crearCargo($data->all());
+            return response()->json($cargo, 201);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
+
+    public function listarCargo()
+    {
+        try {
+            $cargo = $this->cargoService->listarCargo();
+            return response()->json($cargo, 200);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
+
+    public function modificarCargo(Request $data, $id)
+    {
+        try {
+            $cargo = $this->cargoService->modificarCargo($data->all(), $id);
+            return response()->json($cargo, 200);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
+}
