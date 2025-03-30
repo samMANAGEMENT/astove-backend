@@ -42,17 +42,13 @@ class AuthController
     
         $token = $user->createToken('auth_token')->plainTextToken;
     
-        $tokenParts = explode('|', $token);
-        $rawToken = end($tokenParts);
-    
-        $secureToken = hash('sha256', $rawToken);
-    
         return response()->json([
             'message' => 'Inicio de sesión exitoso',
-            'token' => $secureToken,
+            'token' => $token,
             'token_type' => 'Bearer',
         ]);
     }
+    
 
     public function logout(Request $request)
     {

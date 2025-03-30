@@ -26,4 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     require __DIR__ . '/entidad/entidad.php';
+    require __DIR__ . '/operador/operador.php';
+    require __DIR__ . '/servicios/servicio.php';
+    require __DIR__ . '/cargo/cargo.php';
 });

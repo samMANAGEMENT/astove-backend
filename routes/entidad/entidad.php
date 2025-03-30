@@ -7,6 +7,5 @@ Route::prefix('entidad')->group(function () {
 	Route::controller(EntidadesController::class)->group(function () {
 		Route::post('crear-entidad', 'crearEntidad');
 		Route::get('listar-entidades', 'listarEntidades');
-
 	});
 });

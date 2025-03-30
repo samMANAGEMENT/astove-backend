@@ -14,7 +14,7 @@ class EntidadesController
     {
         try {
             $entidad = $this->entidadesSerivce->crearEntidad($crearEntidadesRequest->validated());
-            return response()->json($entidad);
+            return response()->json($entidad, 201);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }
@@ -27,6 +27,16 @@ class EntidadesController
             return response()->json($entidad);
         } catch (\Throwable $th) {
             return response()->json(['ocurrio un error al momento de listar las entidades'], 500);
+        }
+    }
+
+    public function actualizarEntidad(Request $data, int $id)
+    {
+        try {
+            $entidad = $this->entidadesSerivce->actualizarEntidad($data->all(), $id);
+            return response()->json($entidad);
+        } catch (\Throwable $th) {
+            return response()->json(['Ocurrio un error', $th], 500);
         }
     }
 }
