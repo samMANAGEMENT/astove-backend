@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class EntidadesService
 {
-    public function crearEntidad($data)
+    public function crearEntidad(array $data)
     {
         return Entidades::create($data)->get();
     }

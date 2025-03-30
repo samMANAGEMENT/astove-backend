@@ -25,7 +25,7 @@ class crearEntidadesRequest extends FormRequest
     {
         return [
             'nombre' => 'required|string',
-            'direccion' => 'string|string',
+            'direccion' => 'required|string',
             'estado' => 'nullable|boolean'
         ];
     }
