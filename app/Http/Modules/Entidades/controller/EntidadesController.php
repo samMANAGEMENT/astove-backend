@@ -24,7 +24,7 @@ class EntidadesController
     {
         try {
             $entidad = $this->entidadesSerivce->listarEntidad();
-            return response()->json($entidad);
+            return response()->json($entidad, 200);
         } catch (\Throwable $th) {
             return response()->json(['ocurrio un error al momento de listar las entidades'], 500);
         }

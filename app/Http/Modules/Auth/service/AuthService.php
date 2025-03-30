@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthService
 {
-    public function crearUsuario($data)
+    public function crearUsuario(array $data)
     {
         try {
             DB::beginTransaction();
