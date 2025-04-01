@@ -5,6 +5,8 @@ namespace App\Http\Modules\categorias\controller;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Modules\categorias\service\categoriaService;
+use Illuminate\Http\JsonResponse;
+
 
 class categoriaController extends Controller
 {
@@ -27,6 +29,16 @@ class categoriaController extends Controller
         } catch (\Throwable $th) {
             return response()->json($th, );
             
+        }
+    }
+
+    public function updateCategoria(Request $request, $id): JsonResponse
+    {
+        try {
+            $updateCategoria = $this->categoriasService->updateCategoria($id, $request->all());
+            return response()->json(data: $updateCategoria);
+        } catch (\Throwable $th) {
+            return response()->json(data: $th);
         }
     }
 

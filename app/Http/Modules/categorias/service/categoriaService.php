@@ -3,7 +3,7 @@
 namespace App\Http\Modules\categorias\service;
 
 use App\Http\Modules\categorias\models\categorias;
-use Illuminate\Http\Request;
+
 
 class categoriaService 
 {
@@ -17,5 +17,16 @@ class categoriaService
         return categorias::get();
     }
 
+    public function updateCategoria($id, array $data)
+    {
+        // Buscar y actualizar en una sola línea
+        $updated = categorias::where('id', $id)->update($data);
 
+        // Verificar si se actualizó algún registro
+        if ($updated) {
+            return ['message' => 'Categoría actualizada con éxito'];
+        } else {
+            return ['error' => 'No se encontró la categoría o los datos son iguales'];
+        }
+    }
 }
