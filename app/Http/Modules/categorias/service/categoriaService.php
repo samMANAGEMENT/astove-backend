@@ -1,9 +1,7 @@
 <?php
-
 namespace App\Http\Modules\categorias\service;
 
 use App\Http\Modules\categorias\models\categorias;
-
 
 class categoriaService 
 {
@@ -19,14 +17,27 @@ class categoriaService
 
     public function updateCategoria($id, array $data)
     {
-        // Buscar y actualizar en una sola línea
         $updated = categorias::where('id', $id)->update($data);
-
-        // Verificar si se actualizó algún registro
         if ($updated) {
             return ['message' => 'Categoría actualizada con éxito'];
         } else {
             return ['error' => 'No se encontró la categoría o los datos son iguales'];
         }
+    }
+
+    // NUEVAS FUNCIONES (sin tocar las existentes)
+    public function softDeleteCategoria($id)
+    {
+        $categoria = categorias::find($id);
+        if($categoria) {
+            $categoria->delete();
+            return $categoria;
+        }
+        return ['error' => 'Categoría no encontrada'];
+    }
+
+    public function listDeletedCategorias()
+    {
+        return categorias::onlyTrashed()->get();
     }
 }
