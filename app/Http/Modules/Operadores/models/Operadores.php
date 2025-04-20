@@ -26,6 +26,6 @@ class Operadores extends Model
 
     public function cargo()
     {
-        return $this->belongsTo(Cargos::class, 'carago_id');
+        return $this->belongsTo(Cargos::class, 'cargo_id');
     }
 }

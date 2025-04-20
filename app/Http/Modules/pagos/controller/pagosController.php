@@ -12,7 +12,7 @@ class pagosController extends Controller
     {
     }
 
-    public function crearPagoo(Request $data){
+    public function crearPago(Request $data){
         try {
             $crearPago = $this->pagosService->crearPago($data->all());
             return response()->json($crearPago, 200);
