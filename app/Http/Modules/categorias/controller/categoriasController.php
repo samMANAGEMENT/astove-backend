@@ -10,8 +10,7 @@ use Illuminate\Http\Request;
 class categoriasController extends Controller
 {
     public function __construct(private categoriasService $categoriasService)
-    {
-        
+    { 
     }
 
     public function crearCategoria(Request $data){
@@ -31,7 +30,5 @@ class categoriasController extends Controller
             return response()->json('error', 500);
         }
     }
-    
-
 } 
 
