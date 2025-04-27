@@ -5,10 +5,11 @@ namespace App\Http\Modules\Auth\models;
 use App\Http\Modules\Operadores\models\Operadores;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Laravel\Sanctum\HasApiTokens;
 
 class Auth extends Model
 {
-    use HasFactory;
+    use HasFactory, HasApiTokens;
 
     protected $table = 'users';
     protected $fillable = [

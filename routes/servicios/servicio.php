@@ -8,6 +8,6 @@ Route::prefix('servicios')->group(function () {
 	Route::controller(ServiciosController::class)->group(function () {
 		Route::post('crear-servicio', 'crearServicio');
 		Route::get('listar-servicio', 'listarServicio');
-        Route::put('modificar-servicio', 'modificarServicio');
+        Route::put('modificar-servicio/{id}', 'modificarServicio');
 	});
 });

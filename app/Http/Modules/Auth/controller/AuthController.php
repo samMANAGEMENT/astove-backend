@@ -11,8 +11,7 @@ use Illuminate\Validation\ValidationException;
 class AuthController
 {
 
-    public function __construct(private AuthService $authService)
-    {}
+    public function __construct(private AuthService $authService) {}
 
 
     public function register(Request $request)
@@ -25,30 +24,36 @@ class AuthController
         }
     }
 
-    public function login(Request $request)
+    public function login(Request $samuel)
     {
-        $request->validate([
-            'email' => 'required|string|email',
-            'password' => 'required|string',
-        ]);
-    
-        $user = User::where('email', $request->email)->first();
-    
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['Las credenciales proporcionadas son incorrectas.'],
-            ]);
+
+        // $user = User::where('email', $request->email)->first();
+
+        // if (!$user || !Hash::check($request->password, $user->password)) {
+        //     throw ValidationException::withMessages([
+        //         'email' => ['Las credenciales proporcionadas son incorrectas.'],
+        //     ]);
+        // }
+
+        // $token = $user->createToken('auth_token')->plainTextToken;
+
+        // return response()->json([
+        //     'message' => 'Inicio de sesión exitoso',
+        //     'token' => $token,
+        //     'token_type' => 'Bearer',
+        // ]);
+
+        try {
+            $login = $this->authService->login($samuel->all());
+            return response()->json([
+                'message' => 'Login exitoso',
+                'data' => $login,
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()],500);
         }
-    
-        $token = $user->createToken('auth_token')->plainTextToken;
-    
-        return response()->json([
-            'message' => 'Inicio de sesión exitoso',
-            'token' => $token,
-            'token_type' => 'Bearer',
-        ]);
     }
-    
+
 
     public function logout(Request $request)
     {

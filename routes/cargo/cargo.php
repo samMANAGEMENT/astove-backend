@@ -7,6 +7,6 @@ Route::prefix('cargo')->group(function () {
 	Route::controller(cargoController::class)->group(function () {
 		Route::post('crear-cargo', 'crearCargo');
 		Route::get('listar-cargo', 'listarCargo');
-        Route::put('modificar-cargo', 'modificarCargo');
+        Route::put('modificar-cargo/{id}', 'modificarCargo');
 	});
 });
