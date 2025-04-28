@@ -9,7 +9,7 @@ class EntidadesService
 {
     public function crearEntidad(array $data)
     {
-        return Entidades::create($data)->get();
+        return Entidades::create($data);
     }
 
     public function listarEntidad()
