@@ -3,6 +3,7 @@
 namespace App\http\modules\productos\controller;
 
 use App\Http\Controllers\Controller;
+use App\Http\Modules\productos\request\crearProductoRequest;
 use App\http\modules\productos\service\productosService;
 use Illuminate\Http\Request;
 
@@ -12,10 +13,10 @@ class productosController extends Controller
     {
     }
 
-    public function crearProducto(Request $data){
+    public function crearProducto(crearProductoRequest $crearProductoRequest){
         try {
-            $crearProducto = $this->productosService->crearProducto($data->all());
-            return response()->json($crearProducto, 200);
+            $crearProducto = $this->productosService->crearProducto($crearProductoRequest->validated());
+            return response()->json($crearProducto, 201);
         } catch (\Throwable $th) {
             return response()->json('error', 500);
         }

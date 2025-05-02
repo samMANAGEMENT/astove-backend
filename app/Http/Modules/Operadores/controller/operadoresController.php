@@ -8,8 +8,9 @@ use Illuminate\Http\Request;
 
 class operadoresController extends Controller
 {
-    public function __construct(private operadoresService $operadoresService)
-    {}
+    public function __construct(private operadoresService $operadoresService){
+        //
+    }
 
     public function listarOperadores()
     {

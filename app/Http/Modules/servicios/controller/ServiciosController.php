@@ -3,6 +3,7 @@
 namespace App\Http\Modules\servicios\controller;
 
 use App\Http\Controllers\Controller;
+use App\Http\Modules\servicios\request\crearServicioRequest;
 use Illuminate\Http\Request;
 use App\Http\Modules\servicios\service\ServiciosService;
 
@@ -13,10 +14,10 @@ class ServiciosController extends Controller
         
     }
 
-    public function crearServicio(Request $data)
+    public function crearServicio(crearServicioRequest $crearServicioRequest)
     {
         try {
-            $servicio = $this->serviciosService->crearServicio($data->all());
+            $servicio = $this->serviciosService->crearServicio($crearServicioRequest->validated());
             return response()->json($servicio, 201);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);
