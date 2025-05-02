@@ -15,7 +15,7 @@ class cargoController extends Controller
     public function crearCargo(crearCargoRequest $crearCargoRequest)
     {
         try {
-            $cargo = $this->cargoService->crearCargo($crearCargoRequest->validate());
+            $cargo = $this->cargoService->crearCargo($crearCargoRequest->validated());
             return response()->json($cargo, 201);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
