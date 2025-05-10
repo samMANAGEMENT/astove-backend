@@ -4,9 +4,7 @@ namespace App\Http\Modules\Auth\controller;
 
 use App\Http\Modules\Auth\service\AuthService;
 use Illuminate\Http\Request;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use App\Http\Modules\Auth\request\crearRegisterRequest;
 
 class AuthController
 {
@@ -14,17 +12,20 @@ class AuthController
     public function __construct(private AuthService $authService) {}
 
 
-    public function register(Request $request)
+    public function register(crearRegisterRequest $request)
     {
         try {
-            $usuario = $this->authService->crearUsuario($request->all());
+            $usuario = $this->authService->crearUsuario($request->validated());
             return response()->json($usuario, 201);
-        } catch (\Throwable $th) {
-            return response()->json(['error' => $th], 500);
+        } catch (\Exception $th) {
+            return response()->json([
+                'error' => 'Error al crear el usuario',
+                'message' => $th->getMessage()
+            ], 400);
         }
     }
 
-    public function login(Request $samuel)
+    public function login(Request $request)
     {
 
         // $user = User::where('email', $request->email)->first();
@@ -44,7 +45,7 @@ class AuthController
         // ]);
 
         try {
-            $login = $this->authService->login($samuel->all());
+            $login = $this->authService->login($request->all());
             return response()->json([
                 'message' => 'Login exitoso',
                 'data' => $login,

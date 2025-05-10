@@ -37,9 +37,8 @@ class AuthService
 
             return [$operador, $usuario];
         } catch (\Exception $e) {
-
             DB::rollBack();
-            return response()->json(['error' => 'Error al crear el usuario', 'message' => $e->getMessage()], 500);
+            throw new \Exception('Error al crear el usuario: ' . $e->getMessage());
         }
     }
     
