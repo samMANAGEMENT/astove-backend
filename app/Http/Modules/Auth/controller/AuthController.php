@@ -2,6 +2,8 @@
 
 namespace App\Http\Modules\Auth\controller;
 
+use App\Http\Modules\Auth\Request\crearUsuarioRequest;
+use App\Http\Modules\Auth\Request\loguearUsuarioRequest;
 use App\Http\Modules\Auth\service\AuthService;
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -14,41 +16,21 @@ class AuthController
     public function __construct(private AuthService $authService) {}
 
 
-    public function register(Request $request)
+    public function register(crearUsuarioRequest $request)
     {
         try {
-            $usuario = $this->authService->crearUsuario($request->all());
+            $usuario = $this->authService->crearUsuario($request->validated());
             return response()->json($usuario, 201);
         } catch (\Throwable $th) {
-            return response()->json(['error' => $th], 500);
+            return response()->json(['error' => $th->getMessage()], 500);
         }
     }
 
-    public function login(Request $samuel)
+    public function login(loguearUsuarioRequest $request)
     {
-
-        // $user = User::where('email', $request->email)->first();
-
-        // if (!$user || !Hash::check($request->password, $user->password)) {
-        //     throw ValidationException::withMessages([
-        //         'email' => ['Las credenciales proporcionadas son incorrectas.'],
-        //     ]);
-        // }
-
-        // $token = $user->createToken('auth_token')->plainTextToken;
-
-        // return response()->json([
-        //     'message' => 'Inicio de sesión exitoso',
-        //     'token' => $token,
-        //     'token_type' => 'Bearer',
-        // ]);
-
         try {
-            $login = $this->authService->login($samuel->all());
-            return response()->json([
-                'message' => 'Login exitoso',
-                'data' => $login,
-            ], 200);
+            $login = $this->authService->login($request->validated());
+            return response()->json($login, 200);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()],500);
         }
