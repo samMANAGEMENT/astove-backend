@@ -4,6 +4,7 @@ namespace App\Http\Modules\Auth\service;
 
 use App\Http\Modules\Auth\models\Auth;
 use App\Http\Modules\Operadores\models\Operadores;
+use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -30,30 +31,39 @@ class AuthService
                 'email' => $data['email'],
                 'password' => Hash::make($data['password']),
                 'operador_id' => $operador->id,
-
             ]);
 
             DB::commit();
 
             return [$operador, $usuario];
+            
         } catch (\Exception $e) {
-
             DB::rollBack();
-            return response()->json(['error' => 'Error al crear el usuario', 'message' => $e->getMessage()], 500);
+            throw new \Exception('Error al crear el usuario: ', 500);
         }
     }
     
-    public function login($juan)
+    public function login(array $request)
     {
-        $usuario = Auth::where('email', $juan['email'])->first();
+        // Buscar usuario
+        $user = User::where('email', $request['email'])->first();
 
-        // if ($usuario->isEmpty()) {
-        //     throw new \Exception('No se encontro el usuario', 402);
-        // }
+        // Verificar existencia y contraseña
+        if (!$user || !Hash::check($request['password'], $user->password)) {
+            throw new \Exception('Credenciales inválidas.', 401);
+        }
 
-        $token = $usuario->createToken('auth_token')->plainTextToken;
+        // Crear token
+        $tokenResult = $user->createToken('auth_token');
 
-        return $token;
+        // Obtener solo el token limpio (sin ID adelante)
+        $plainTextToken = explode('|', $tokenResult->plainTextToken)[1];
+
+        // Responder
+        return [
+            'access_token' => $plainTextToken,
+            'token_type' => 'Bearer',
+        ];
 
     }
 }
