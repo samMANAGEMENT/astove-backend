@@ -27,7 +27,7 @@ class crearServicioRequest extends FormRequest
     {
         return [
             'nombre' => 'required|string',
-            'precio' => 'required|float'
+            'precio' => 'required|numeric'
         ];
     }
 

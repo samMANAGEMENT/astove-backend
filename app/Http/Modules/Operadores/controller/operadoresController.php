@@ -12,6 +12,16 @@ class operadoresController extends Controller
         //
     }
 
+    public function crearOperador(Request $request)
+    {
+        try {
+            $operadores = $this->operadoresService->listarOperadores($request->all());
+            return response()->json($operadores, 200);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
+
     public function listarOperadores()
     {
         try {

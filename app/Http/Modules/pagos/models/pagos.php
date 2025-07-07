@@ -19,6 +19,6 @@ class pagos extends Model
 
     public function empleado()
     {
-        return $this->belongsTo(Operadores::class, 'empleados_id');
+        return $this->belongsTo(Operadores::class, 'empleado_id');
     }
 }

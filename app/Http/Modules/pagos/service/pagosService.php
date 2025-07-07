@@ -11,6 +11,6 @@ class pagosService
     }
 
     public function listarPago(){
-        return pagos::get();
+        return pagos::with('empleado:id,nombre,apellido')->orderBy('created_at', 'desc')->get();
     }
 }

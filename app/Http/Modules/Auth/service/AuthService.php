@@ -39,7 +39,7 @@ class AuthService
             
         } catch (\Exception $e) {
             DB::rollBack();
-            throw new \Exception('Error al crear el usuario: ', 500);
+            throw new \Exception("Error al crear el usuario: " . $e->getMessage(), 500, $e);
         }
     }
     
@@ -61,6 +61,7 @@ class AuthService
 
         // Responder
         return [
+            'email' => $user['email'],
             'access_token' => $plainTextToken,
             'token_type' => 'Bearer',
         ];

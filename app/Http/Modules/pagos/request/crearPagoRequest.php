@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Modules\Pago\request;
+namespace App\Http\Modules\pagos\request;
 
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
@@ -26,8 +26,8 @@ class crearPagoRequest extends FormRequest
     public function rules()
     {
         return [
-            'nombre' => 'required|string',
-            'monto' => 'required|float',
+            'empleado_id' => 'required',
+            'monto' => 'required',
             'fecha' => 'required|string',
             'estado' => 'nullable|boolean'
         ];

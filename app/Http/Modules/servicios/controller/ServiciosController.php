@@ -43,4 +43,49 @@ class ServiciosController extends Controller
             return response()->json($th->getMessage(), 500);
         }
     }
+
+    public function servicioRealizado(Request $request)
+    {
+        try {
+            $servicio = $this->serviciosService->servicioRealizado($request->only([
+                'empleado_id',
+                'servicio_id',
+                'cantidad',
+                'fecha'
+            ]));
+            return response()->json($servicio, 201);
+        } catch (\Throwable $th) {
+            return response()->json($th->getMessage(), 500);
+        }
+    }
+
+    public function listarServiciosRealizados()
+    {
+        try {
+            $servicio = $this->serviciosService->listarServiciosRealizados();
+            return response()->json($servicio, 200);
+        } catch (\Throwable $th) {
+            return response()->json($th->getMessage(), 500);
+        }
+    }
+
+    public function calcularPagosEmpleados()
+    {
+        try {
+            $pagos = $this->serviciosService->calcularPagosEmpleados();
+            return response()->json($pagos, 200);
+        } catch (\Throwable $th) {
+            return response()->json($th->getMessage(), 500);
+        }
+    }
+
+    public function totalGanadoServicios()
+    {
+        try {
+            $total = $this->serviciosService->totalGanadoServicios();
+            return response()->json(['total_ganado' => $total], 200);
+        } catch (\Throwable $th) {
+            return response()->json($th->getMessage(), 500);
+        }
+    }
 }

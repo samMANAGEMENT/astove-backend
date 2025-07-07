@@ -3,7 +3,7 @@
 namespace App\http\modules\pagos\controller;
 
 use App\Http\Controllers\Controller;
-use App\Http\Modules\Pago\request\crearPagoRequest;
+use App\Http\Modules\pagos\request\crearPagoRequest;
 use App\http\modules\pagos\service\pagosService;
 use Illuminate\Http\Request;
 
@@ -18,7 +18,7 @@ class pagosController extends Controller
             $crearPago = $this->pagosService->crearPago($crearPagoRequest->validated());
             return response()->json($crearPago, 201);
         } catch (\Throwable $th) {
-            return response()->json('error', 500);
+            return response()->json(['error' => $th->getMessage()], 500);
         }
     }
     public function listarPago(){
@@ -26,7 +26,7 @@ class pagosController extends Controller
             $crearPago = $this->pagosService->listarPago();
             return response($crearPago, 200);
         } catch (\Throwable $th) {
-            return response()->json('error', 500);
+            return response()->json(['error' => 'error'], 500);
         }
     }
 }
