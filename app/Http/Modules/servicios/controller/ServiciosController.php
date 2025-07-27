@@ -37,7 +37,11 @@ class ServiciosController extends Controller
     public function modificarServicio(Request $data, $id)
     {
         try {
-            $servicio = $this->serviciosService->modificarServicio($data->all(), $id);
+            $servicio = $this->serviciosService->modificarServicio($data->only([
+                'nombre',
+                'precio',
+                'porcentaje_pago_empleado'
+            ]), $id);
             return response()->json($servicio, 200);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);

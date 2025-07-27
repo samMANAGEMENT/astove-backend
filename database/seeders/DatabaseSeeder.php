@@ -18,5 +18,20 @@ class DatabaseSeeder extends Seeder
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',
         // ]);
+
+        // Crear cargo Desarrollador
+        \App\Http\Modules\Cargos\models\Cargos::firstOrCreate([
+            'nombre' => 'Desarrollador',
+        ], [
+            'sueldo_base' => 0 // Puedes cambiar el sueldo base si lo deseas
+        ]);
+
+        // Crear Entidad de Prueba
+        \App\Http\Modules\Entidades\models\Entidades::firstOrCreate([
+            'nombre' => 'Entidad de Prueba',
+        ], [
+            'direccion' => 'Dirección de prueba',
+            'estado' => 'true'
+        ]);
     }
 }

@@ -61,7 +61,7 @@ class ServiciosService
         $mesActual = date('m');
         $anioActual = date('Y');
 
-        // Trae solo los servicios realizados del mes y año actual con la relación del servicio (para el precio)
+        // Trae solo los servicios realizados del mes y año actual con la relación del servicio (para el precio y porcentaje)
         $servicios = ServiciosRealizados::with('servicio', 'empleado')
             ->whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual)
@@ -71,7 +71,9 @@ class ServiciosService
         $pagos = $servicios->groupBy('empleado_id')->map(function ($items, $empleado_id) {
             $empleado = $items->first()->empleado;
             $total = $items->reduce(function ($carry, $item) {
-                return $carry + ($item->cantidad * ($item->servicio->precio ?? 0));
+                $precio = $item->servicio->precio ?? 0;
+                $porcentaje = $item->servicio->porcentaje_pago_empleado ?? 50;
+                return $carry + ($item->cantidad * $precio * ($porcentaje / 100));
             }, 0);
 
             return [

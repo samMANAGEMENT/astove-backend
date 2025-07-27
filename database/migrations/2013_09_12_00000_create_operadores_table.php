@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('nombre');
             $table->string('apellido');
             $table->foreignId('entidad_id')->constrained('entidades');
-            $table->integer('telefono')->nullable();
+            $table->string('telefono')->nullable();
             $table->foreignId('cargo_id')->constrained('cargos');
             $table->timestamps();
         });
