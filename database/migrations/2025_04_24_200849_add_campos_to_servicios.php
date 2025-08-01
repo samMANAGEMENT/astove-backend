@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('servicios', function (Blueprint $table) {
             $table->boolean('estado')->default(1)->after('precio');
-            $table->decimal('porcentaje_pago_empleado', 5, 2)->default(50.00)->after('estado');
+            $table->decimal('porcentaje_pago_empleado', 5, 2)->default(40.00)->after('estado');
         });
     }
 

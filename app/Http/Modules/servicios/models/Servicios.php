@@ -12,6 +12,7 @@ class Servicios extends Model
     protected $fillable = [
         'nombre',
         'precio',
+        'estado',
         'porcentaje_pago_empleado'
     ];
 }

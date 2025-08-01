@@ -17,7 +17,21 @@ class ServiciosRealizados extends Model
         'empleado_id',
         'servicio_id',
         'cantidad',
-        'fecha'
+        'fecha',
+        'pagado',
+        'pago_id',
+        'metodo_pago',
+        'monto_efectivo',
+        'monto_transferencia',
+        'total_servicio'
+    ];
+
+    protected $casts = [
+        'fecha' => 'datetime',
+        'pagado' => 'boolean',
+        'monto_efectivo' => 'decimal:2',
+        'monto_transferencia' => 'decimal:2',
+        'total_servicio' => 'decimal:2'
     ];
 
 // Relación con el modelo Empleado
@@ -30,6 +44,12 @@ public function empleado()
 public function servicio()
 {
     return $this->belongsTo(Servicios::class, 'servicio_id');
+}
+
+// Relación con el modelo Pago
+public function pago()
+{
+    return $this->belongsTo(\App\Http\Modules\pagos\models\pagos::class, 'pago_id');
 }
 
 }
