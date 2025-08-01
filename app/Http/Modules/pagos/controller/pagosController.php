@@ -21,9 +21,10 @@ class pagosController extends Controller
             return response()->json(['error' => $th->getMessage()], 500);
         }
     }
-    public function listarPago(){
+    public function listarPago(Request $request){
         try {
-            $crearPago = $this->pagosService->listarPago();
+            $userEntityId = $request->get('user_entity_id');
+            $crearPago = $this->pagosService->listarPago($userEntityId);
             return response($crearPago, 200);
         } catch (\Throwable $th) {
             return response()->json(['error' => 'error'], 500);
@@ -82,6 +83,18 @@ class pagosController extends Controller
             return response()->json(['error' => $th->getMessage()], 500);
         }
     }
+
+    public function getServiciosEmpleado($empleadoId)
+    {
+        try {
+            $servicios = $this->pagosService->getServiciosEmpleado($empleadoId);
+            return response()->json($servicios, 200);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
+
+
 
     public function getEstadoPagosEmpleados()
     {

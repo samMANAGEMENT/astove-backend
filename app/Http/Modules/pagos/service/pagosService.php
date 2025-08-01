@@ -13,9 +13,17 @@ class pagosService
         return pagos::create($data);
     }
 
-    public function listarPago(){
-        return pagos::with('empleado:id,nombre,apellido')
-            ->orderBy('created_at', 'desc')
+    public function listarPago($userEntityId = null){
+        $query = pagos::with('empleado:id,nombre,apellido,entidad_id');
+        
+        // Si se proporciona un ID de entidad, filtrar por esa entidad
+        if ($userEntityId) {
+            $query->whereHas('empleado', function($q) use ($userEntityId) {
+                $q->where('entidad_id', $userEntityId);
+            });
+        }
+        
+        return $query->orderBy('created_at', 'desc')
             ->get()
             ->map(function($pago) {
                 return [
@@ -25,6 +33,7 @@ class pagosService
                         'id' => $pago->empleado->id,
                         'nombre' => $pago->empleado->nombre,
                         'apellido' => $pago->empleado->apellido,
+                        'entidad_id' => $pago->empleado->entidad_id,
                     ],
                     'monto' => $pago->monto,
                     'fecha' => $pago->fecha,
@@ -271,6 +280,31 @@ class pagosService
                     'porcentaje_empleado' => $porcentajeEmpleado,
                     'monto_servicio' => $montoServicio,
                     'monto_empleado' => $montoEmpleado
+                ];
+            });
+    }
+
+    public function getServiciosEmpleado($empleadoId)
+    {
+        // Obtener todos los servicios del empleado (pagados y pendientes)
+        return ServiciosRealizados::where('empleado_id', $empleadoId)
+            ->with('servicio:id,nombre,porcentaje_pago_empleado,precio')
+            ->orderBy('fecha', 'desc')
+            ->get()
+            ->map(function($servicio) {
+                $montoServicio = $servicio->servicio->precio * $servicio->cantidad;
+                $porcentajeEmpleado = $servicio->servicio->porcentaje_pago_empleado;
+                $montoEmpleado = ($montoServicio * $porcentajeEmpleado) / 100;
+                
+                return [
+                    'id' => $servicio->id,
+                    'servicio_nombre' => $servicio->servicio->nombre,
+                    'cantidad' => $servicio->cantidad,
+                    'fecha' => $servicio->fecha,
+                    'porcentaje_empleado' => $porcentajeEmpleado,
+                    'monto_servicio' => $montoServicio,
+                    'monto_empleado' => $montoEmpleado,
+                    'pagado' => $servicio->pagado
                 ];
             });
     }

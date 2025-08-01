@@ -31,4 +31,5 @@ Route::middleware('auth:sanctum')->group(function () {
     require __DIR__ . '/cargo/cargo.php';
     require __DIR__ . '/ventas/ventas.php';
     require __DIR__ . '/pagos/pagos.php';
+    require __DIR__ . '/roles/roles.php';
 });

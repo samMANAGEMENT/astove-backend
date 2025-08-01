@@ -59,9 +59,34 @@ class AuthService
         // Obtener solo el token limpio (sin ID adelante)
         $plainTextToken = explode('|', $tokenResult->plainTextToken)[1];
 
-        // Responder
+        // Cargar relaciones necesarias
+        $user->load(['operador.entidades', 'operador.cargo', 'role']);
+
+        // Responder con información completa del usuario
         return [
-            'email' => $user['email'],
+            'user' => [
+                'id' => $user->id,
+                'email' => $user->email,
+                'role' => $user->role ? [
+                    'id' => $user->role->id,
+                    'nombre' => $user->role->nombre,
+                    'descripcion' => $user->role->descripcion
+                ] : null,
+                'operador' => $user->operador ? [
+                    'id' => $user->operador->id,
+                    'nombre' => $user->operador->nombre,
+                    'apellido' => $user->operador->apellido,
+                    'entidad_id' => $user->operador->entidad_id,
+                    'entidad' => $user->operador->entidades ? [
+                        'id' => $user->operador->entidades->id,
+                        'nombre' => $user->operador->entidades->nombre
+                    ] : null,
+                    'cargo' => $user->operador->cargo ? [
+                        'id' => $user->operador->cargo->id,
+                        'nombre' => $user->operador->cargo->nombre
+                    ] : null
+                ] : null
+            ],
             'access_token' => $plainTextToken,
             'token_type' => 'Bearer',
         ];
