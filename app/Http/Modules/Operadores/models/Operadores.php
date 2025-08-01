@@ -16,7 +16,8 @@ class Operadores extends Model
         'apellido',
         'entidad_id',
         'telefono',
-        'cargo_id'
+        'cargo_id',
+        'user_id'
     ];
 
     public function entidades()
@@ -27,5 +28,20 @@ class Operadores extends Model
     public function cargo()
     {
         return $this->belongsTo(Cargos::class, 'cargo_id');
+    }
+
+    public function usuario()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
+    }
+
+    public function serviciosRealizados()
+    {
+        return $this->hasMany(\App\Http\Modules\servicios\models\ServiciosRealizados::class, 'empleado_id');
+    }
+
+    public function pagos()
+    {
+        return $this->hasMany(\App\Http\Modules\pagos\models\pagos::class, 'empleado_id');
     }
 }

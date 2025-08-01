@@ -11,7 +11,11 @@ Route::prefix('servicios')->group(function () {
 		Route::post('servicio-realizado', 'servicioRealizado');
 		Route::get('listar-servicios-realizados', 'listarServiciosRealizados');
 		Route::get('total-pagar-operador', 'calcularPagosEmpleados');
+		Route::get('total-pagar-operador-completo', 'calcularPagosEmpleadosCompleto');
 		Route::get('total-ganado', 'totalGanadoServicios');
+		Route::get('ganancia-neta', 'calcularGananciaNeta');
+		Route::get('ganancias-por-metodo-pago', 'gananciasPorMetodoPago');
+		Route::get('total-ganancias-separadas', 'totalGananciasSeparadas');
         Route::put('modificar-servicio/{id}', 'modificarServicio');
 	});
 });

@@ -14,7 +14,18 @@ class pagos extends Model
         'empleado_id',
         'monto',
         'fecha',
-        'estado'
+        'estado',
+        'tipo_pago',
+        'monto_pendiente_antes',
+        'monto_pendiente_despues',
+        'servicios_incluidos',
+        'semana_pago'
+    ];
+
+    protected $casts = [
+        'servicios_incluidos' => 'array',
+        'fecha' => 'datetime',
+        'estado' => 'boolean'
     ];
 
     public function empleado()

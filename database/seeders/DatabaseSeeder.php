@@ -23,15 +23,20 @@ class DatabaseSeeder extends Seeder
         \App\Http\Modules\Cargos\models\Cargos::firstOrCreate([
             'nombre' => 'Desarrollador',
         ], [
-            'sueldo_base' => 0 // Puedes cambiar el sueldo base si lo deseas
+            'sueldo_base' => 0
         ]);
 
         // Crear Entidad de Prueba
         \App\Http\Modules\Entidades\models\Entidades::firstOrCreate([
-            'nombre' => 'Entidad de Prueba',
+            'nombre' => 'suitpress IAO',
         ], [
-            'direccion' => 'Dirección de prueba',
+            'direccion' => 'null',
             'estado' => 'true'
+        ]);
+
+        // Ejecutar el seeder de servicios
+        $this->call([
+            ServiciosSeeder::class,
         ]);
     }
 }

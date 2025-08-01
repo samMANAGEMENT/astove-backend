@@ -15,6 +15,6 @@ class operadoresService
 
     public function listarOperadores()
     {
-        return Operadores::get();
+        return Operadores::with(['entidades', 'cargo', 'usuario'])->get();
     }
 }
