@@ -23,7 +23,10 @@ class ServiciosRealizados extends Model
         'metodo_pago',
         'monto_efectivo',
         'monto_transferencia',
-        'total_servicio'
+        'total_servicio',
+        'descuento_porcentaje',
+        'monto_descuento',
+        'total_con_descuento'
     ];
 
     protected $casts = [
@@ -31,7 +34,10 @@ class ServiciosRealizados extends Model
         'pagado' => 'boolean',
         'monto_efectivo' => 'decimal:2',
         'monto_transferencia' => 'decimal:2',
-        'total_servicio' => 'decimal:2'
+        'total_servicio' => 'decimal:2',
+        'descuento_porcentaje' => 'decimal:2',
+        'monto_descuento' => 'decimal:2',
+        'total_con_descuento' => 'decimal:2'
     ];
 
 // Relación con el modelo Empleado
