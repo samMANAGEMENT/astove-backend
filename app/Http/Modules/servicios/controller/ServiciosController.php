@@ -59,7 +59,8 @@ class ServiciosController extends Controller
                 'metodo_pago',
                 'monto_efectivo',
                 'monto_transferencia',
-                'total_servicio'
+                'total_servicio',
+                'descuento_porcentaje'
             ]));
             return response()->json($servicio, 201);
         } catch (\Throwable $th) {

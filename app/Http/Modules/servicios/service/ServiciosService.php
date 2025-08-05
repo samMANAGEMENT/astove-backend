@@ -30,6 +30,7 @@ class ServiciosService
         $montoEfectivo = $data['monto_efectivo'] ?? 0;
         $montoTransferencia = $data['monto_transferencia'] ?? 0;
         $totalServicio = $data['total_servicio'] ?? 0;
+        $descuentoPorcentaje = $data['descuento_porcentaje'] ?? 0;
         
         // Si no se proporciona total_servicio, calcularlo
         if ($totalServicio == 0) {
@@ -37,10 +38,20 @@ class ServiciosService
             $totalServicio = $data['cantidad'] * ($servicio->precio ?? 0);
         }
         
-        // Validar que la suma de efectivo y transferencia sea igual al total
-        if (($montoEfectivo + $montoTransferencia) != $totalServicio) {
-            throw new \Exception('La suma de efectivo y transferencia debe ser igual al total del servicio');
+        // Calcular descuento y total con descuento
+        $montoDescuento = $totalServicio * ($descuentoPorcentaje / 100);
+        $totalConDescuento = $totalServicio - $montoDescuento;
+        
+        // Validar que la suma de efectivo y transferencia sea igual al total con descuento
+        // Usar tolerancia para problemas de precisión decimal
+        $sumaMontos = $montoEfectivo + $montoTransferencia;
+        if (abs($sumaMontos - $totalConDescuento) > 0.01) {
+            throw new \Exception('La suma de efectivo y transferencia debe ser igual al total del servicio con descuento aplicado');
         }
+        
+        // Agregar los campos calculados al array de datos
+        $data['monto_descuento'] = $montoDescuento;
+        $data['total_con_descuento'] = $totalConDescuento;
         
         return ServiciosRealizados::create($data);
     }
@@ -57,6 +68,13 @@ class ServiciosService
                     'servicio_id' => $item->servicio_id,
                     'cantidad' => $item->cantidad,
                     'fecha' => $item->fecha,
+                    'metodo_pago' => $item->metodo_pago,
+                    'monto_efectivo' => $item->monto_efectivo,
+                    'monto_transferencia' => $item->monto_transferencia,
+                    'total_servicio' => $item->total_servicio,
+                    'descuento_porcentaje' => $item->descuento_porcentaje,
+                    'monto_descuento' => $item->monto_descuento,
+                    'total_con_descuento' => $item->total_con_descuento,
                     'empleado' => $item->empleado ? [
                         'id' => $item->empleado->id,
                         'nombre' => $item->empleado->nombre,
@@ -87,6 +105,7 @@ class ServiciosService
         $pagos = $servicios->groupBy('empleado_id')->map(function ($items, $empleado_id) {
             $empleado = $items->first()->empleado;
             $total = $items->reduce(function ($carry, $item) {
+                // El operador recibe su porcentaje sobre el precio ORIGINAL (sin descuento)
                 $precio = $item->servicio->precio ?? 0;
                 $porcentaje = $item->servicio->porcentaje_pago_empleado ?? 50;
                 return $carry + ($item->cantidad * $precio * ($porcentaje / 100));
@@ -119,12 +138,13 @@ class ServiciosService
         $pagos = $servicios->groupBy('empleado_id')->map(function ($items, $empleado_id) {
             $empleado = $items->first()->empleado;
             
-            // Calcular total bruto y total a pagar
+            // Calcular total bruto (precio original sin descuento) y total a pagar
             $totalBruto = $items->reduce(function ($carry, $item) {
                 return $carry + ($item->cantidad * ($item->servicio->precio ?? 0));
             }, 0);
 
             $totalPagar = $items->reduce(function ($carry, $item) {
+                // El operador recibe su porcentaje sobre el precio ORIGINAL (sin descuento)
                 $precio = $item->servicio->precio ?? 0;
                 $porcentaje = $item->servicio->porcentaje_pago_empleado ?? 50;
                 return $carry + ($item->cantidad * $precio * ($porcentaje / 100));
@@ -145,6 +165,9 @@ class ServiciosService
                     'subtotal' => $subtotal,
                     'porcentaje_empleado' => $porcentaje,
                     'pago_empleado' => $pagoEmpleado,
+                    'descuento_porcentaje' => $item->descuento_porcentaje,
+                    'monto_descuento' => $item->monto_descuento,
+                    'total_con_descuento' => $item->total_con_descuento,
                     'fecha' => $item->fecha
                 ];
             });
@@ -175,9 +198,9 @@ class ServiciosService
             ->whereMonth('fecha', $mesActual)
             ->get();
 
-        // Suma el total: cantidad * precio de cada servicio
+        // Suma el total con descuento (lo que realmente se cobró)
         $total = $servicios->reduce(function ($carry, $item) {
-            return $carry + ($item->cantidad * ($item->servicio->precio ?? 0));
+            return $carry + ($item->total_con_descuento ?? ($item->cantidad * ($item->servicio->precio ?? 0)));
         }, 0);
 
         return $total;
@@ -195,12 +218,12 @@ class ServiciosService
             ->whereMonth('fecha', $mesActual)
             ->get();
 
-        // Calcular ingresos totales
+        // Calcular ingresos totales (con descuento aplicado)
         $ingresosTotales = $servicios->reduce(function ($carry, $item) {
-            return $carry + ($item->cantidad * ($item->servicio->precio ?? 0));
+            return $carry + ($item->total_con_descuento ?? ($item->cantidad * ($item->servicio->precio ?? 0)));
         }, 0);
 
-        // Calcular total a pagar a empleados
+        // Calcular total a pagar a empleados (sobre precio original, sin descuento)
         $totalPagarEmpleados = $servicios->reduce(function ($carry, $item) {
             $precio = $item->servicio->precio ?? 0;
             $porcentaje = $item->servicio->porcentaje_pago_empleado ?? 50;
@@ -210,11 +233,14 @@ class ServiciosService
         // Calcular ganancia neta
         $gananciaNeta = $ingresosTotales - $totalPagarEmpleados;
 
+        // Calcular porcentaje de ganancia
+        $porcentajeGanancia = $ingresosTotales > 0 ? ($gananciaNeta / $ingresosTotales) * 100 : 0;
+
         return [
             'ingresos_totales' => $ingresosTotales,
             'total_pagar_empleados' => $totalPagarEmpleados,
             'ganancia_neta' => $gananciaNeta,
-            'porcentaje_ganancia' => $ingresosTotales > 0 ? ($gananciaNeta / $ingresosTotales) * 100 : 0,
+            'porcentaje_ganancia' => $porcentajeGanancia,
             'mes' => $mesActual,
             'anio' => $anioActual
         ];
@@ -239,16 +265,22 @@ class ServiciosService
 
         // Calcular ganancias netas por método de pago
         $gananciaEfectivo = $servicios->reduce(function ($carry, $item) {
+            // El operador recibe su porcentaje sobre el precio ORIGINAL (sin descuento)
             $precio = $item->servicio->precio ?? 0;
             $porcentaje = $item->servicio->porcentaje_pago_empleado ?? 50;
             $ingresoEmpleado = $item->cantidad * $precio * ($porcentaje / 100);
+            
+            // La ganancia se calcula sobre lo que realmente se cobró (efectivo)
             return $carry + ($item->monto_efectivo - $ingresoEmpleado);
         }, 0);
 
         $gananciaTransferencia = $servicios->reduce(function ($carry, $item) {
+            // El operador recibe su porcentaje sobre el precio ORIGINAL (sin descuento)
             $precio = $item->servicio->precio ?? 0;
             $porcentaje = $item->servicio->porcentaje_pago_empleado ?? 50;
             $ingresoEmpleado = $item->cantidad * $precio * ($porcentaje / 100);
+            
+            // La ganancia se calcula sobre lo que realmente se cobró (transferencia)
             return $carry + ($item->monto_transferencia - $ingresoEmpleado);
         }, 0);
 
