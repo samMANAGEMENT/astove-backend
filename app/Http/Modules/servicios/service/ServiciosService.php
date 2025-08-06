@@ -4,6 +4,7 @@ namespace App\Http\Modules\servicios\service;
 
 use App\Http\Modules\servicios\models\Servicios;
 use App\Http\Modules\servicios\models\ServiciosRealizados;
+use App\Http\Modules\servicios\models\IngresosAdicionales;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -199,9 +200,20 @@ class ServiciosService
             ->get();
 
         // Suma el total con descuento (lo que realmente se cobró)
-        $total = $servicios->reduce(function ($carry, $item) {
+        $totalServicios = $servicios->reduce(function ($carry, $item) {
             return $carry + ($item->total_con_descuento ?? ($item->cantidad * ($item->servicio->precio ?? 0)));
         }, 0);
+
+        // Trae los ingresos adicionales del mes y año actual
+        $ingresosAdicionales = IngresosAdicionales::whereYear('fecha', $anioActual)
+            ->whereMonth('fecha', $mesActual)
+            ->get();
+
+        // Suma el total de ingresos adicionales
+        $totalIngresosAdicionales = $ingresosAdicionales->sum('monto');
+
+        // Total general (servicios + ingresos adicionales)
+        $total = $totalServicios + $totalIngresosAdicionales;
 
         return $total;
     }
@@ -218,19 +230,31 @@ class ServiciosService
             ->whereMonth('fecha', $mesActual)
             ->get();
 
-        // Calcular ingresos totales (con descuento aplicado)
-        $ingresosTotales = $servicios->reduce(function ($carry, $item) {
+        // Calcular ingresos totales de servicios (con descuento aplicado)
+        $ingresosServicios = $servicios->reduce(function ($carry, $item) {
             return $carry + ($item->total_con_descuento ?? ($item->cantidad * ($item->servicio->precio ?? 0)));
         }, 0);
 
-        // Calcular total a pagar a empleados (sobre precio original, sin descuento)
+        // Trae los ingresos adicionales del mes y año actual
+        $ingresosAdicionales = IngresosAdicionales::whereYear('fecha', $anioActual)
+            ->whereMonth('fecha', $mesActual)
+            ->get();
+
+        // Suma el total de ingresos adicionales
+        $totalIngresosAdicionales = $ingresosAdicionales->sum('monto');
+
+        // Ingresos totales (servicios + ingresos adicionales)
+        $ingresosTotales = $ingresosServicios + $totalIngresosAdicionales;
+
+        // Calcular total a pagar a empleados (solo de servicios, no de ingresos adicionales)
         $totalPagarEmpleados = $servicios->reduce(function ($carry, $item) {
             $precio = $item->servicio->precio ?? 0;
             $porcentaje = $item->servicio->porcentaje_pago_empleado ?? 50;
             return $carry + ($item->cantidad * $precio * ($porcentaje / 100));
         }, 0);
 
-        // Calcular ganancia neta
+        // Calcular ganancia neta (ingresos totales - pagos a empleados)
+        // Los ingresos adicionales son 100% ganancia ya que no tienen porcentaje de empleado
         $gananciaNeta = $ingresosTotales - $totalPagarEmpleados;
 
         // Calcular porcentaje de ganancia
@@ -238,6 +262,8 @@ class ServiciosService
 
         return [
             'ingresos_totales' => $ingresosTotales,
+            'ingresos_servicios' => $ingresosServicios,
+            'ingresos_adicionales' => $totalIngresosAdicionales,
             'total_pagar_empleados' => $totalPagarEmpleados,
             'ganancia_neta' => $gananciaNeta,
             'porcentaje_ganancia' => $porcentajeGanancia,
@@ -258,12 +284,17 @@ class ServiciosService
             ->whereMonth('fecha', $mesActual)
             ->get();
 
-        // Calcular totales por método de pago
-        $totalEfectivo = $servicios->sum('monto_efectivo');
-        $totalTransferencia = $servicios->sum('monto_transferencia');
+        // Trae los ingresos adicionales del mes y año actual
+        $ingresosAdicionales = IngresosAdicionales::whereYear('fecha', $anioActual)
+            ->whereMonth('fecha', $mesActual)
+            ->get();
+
+        // Calcular totales por método de pago (servicios + ingresos adicionales)
+        $totalEfectivo = $servicios->sum('monto_efectivo') + $ingresosAdicionales->sum('monto_efectivo');
+        $totalTransferencia = $servicios->sum('monto_transferencia') + $ingresosAdicionales->sum('monto_transferencia');
         $totalGeneral = $totalEfectivo + $totalTransferencia;
 
-        // Calcular ganancias netas por método de pago
+        // Calcular ganancias netas por método de pago (solo de servicios)
         $gananciaEfectivo = $servicios->reduce(function ($carry, $item) {
             // El operador recibe su porcentaje sobre el precio ORIGINAL (sin descuento)
             $precio = $item->servicio->precio ?? 0;
@@ -283,6 +314,10 @@ class ServiciosService
             // La ganancia se calcula sobre lo que realmente se cobró (transferencia)
             return $carry + ($item->monto_transferencia - $ingresoEmpleado);
         }, 0);
+
+        // Agregar ganancia de ingresos adicionales (100% ganancia)
+        $gananciaEfectivo += $ingresosAdicionales->sum('monto_efectivo');
+        $gananciaTransferencia += $ingresosAdicionales->sum('monto_transferencia');
 
         return [
             'efectivo' => [
@@ -313,14 +348,187 @@ class ServiciosService
             ->whereMonth('fecha', $mesActual)
             ->get();
 
-        // Calcular totales
-        $totalEfectivo = $servicios->sum('monto_efectivo');
-        $totalTransferencia = $servicios->sum('monto_transferencia');
+        // Trae los ingresos adicionales del mes y año actual
+        $ingresosAdicionales = IngresosAdicionales::whereYear('fecha', $anioActual)
+            ->whereMonth('fecha', $mesActual)
+            ->get();
+
+        // Calcular totales (servicios + ingresos adicionales)
+        $totalEfectivo = $servicios->sum('monto_efectivo') + $ingresosAdicionales->sum('monto_efectivo');
+        $totalTransferencia = $servicios->sum('monto_transferencia') + $ingresosAdicionales->sum('monto_transferencia');
 
         return [
             'efectivo' => $totalEfectivo,
             'transferencia' => $totalTransferencia,
             'total' => $totalEfectivo + $totalTransferencia,
+            'mes' => $mesActual,
+            'anio' => $anioActual
+        ];
+    }
+
+    // Métodos para Ingresos Adicionales
+    public function crearIngresoAdicional(array $data)
+    {
+        // Validar que los montos sumen el total
+        $montoEfectivo = $data['monto_efectivo'] ?? 0;
+        $montoTransferencia = $data['monto_transferencia'] ?? 0;
+        $montoTotal = $data['monto'] ?? 0;
+        
+        // Validar que la suma de efectivo y transferencia sea igual al monto total
+        $sumaMontos = $montoEfectivo + $montoTransferencia;
+        if (abs($sumaMontos - $montoTotal) > 0.01) {
+            throw new \Exception('La suma de efectivo y transferencia debe ser igual al monto total');
+        }
+        
+        return IngresosAdicionales::create($data);
+    }
+
+    public function listarIngresosAdicionales()
+    {
+        return IngresosAdicionales::with(['empleado:id,nombre,apellido'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'concepto' => $item->concepto,
+                    'monto' => $item->monto,
+                    'metodo_pago' => $item->metodo_pago,
+                    'monto_efectivo' => $item->monto_efectivo,
+                    'monto_transferencia' => $item->monto_transferencia,
+                    'tipo' => $item->tipo,
+                    'categoria' => $item->categoria,
+                    'descripcion' => $item->descripcion,
+                    'empleado_id' => $item->empleado_id,
+                    'fecha' => $item->fecha,
+                    'empleado' => $item->empleado ? [
+                        'id' => $item->empleado->id,
+                        'nombre' => $item->empleado->nombre,
+                        'apellido' => $item->empleado->apellido,
+                    ] : null,
+                ];
+            });
+    }
+
+    public function totalIngresosAdicionales()
+    {
+        // Obtiene el mes y año actual
+        $mesActual = date('m');
+        $anioActual = date('Y');
+
+        // Trae los ingresos adicionales del mes y año actual
+        $ingresos = IngresosAdicionales::whereYear('fecha', $anioActual)
+            ->whereMonth('fecha', $mesActual)
+            ->get();
+
+        // Calcular totales por método de pago
+        $totalEfectivo = $ingresos->sum('monto_efectivo');
+        $totalTransferencia = $ingresos->sum('monto_transferencia');
+        $totalGeneral = $totalEfectivo + $totalTransferencia;
+
+        // Calcular totales por tipo
+        $totalAccesorios = $ingresos->where('tipo', 'accesorio')->sum('monto');
+        $totalServiciosOcasionales = $ingresos->where('tipo', 'servicio_ocasional')->sum('monto');
+        $totalOtros = $ingresos->where('tipo', 'otro')->sum('monto');
+
+        return [
+            'efectivo' => $totalEfectivo,
+            'transferencia' => $totalTransferencia,
+            'total_general' => $totalGeneral,
+            'por_tipo' => [
+                'accesorios' => $totalAccesorios,
+                'servicios_ocasionales' => $totalServiciosOcasionales,
+                'otros' => $totalOtros
+            ],
+            'mes' => $mesActual,
+            'anio' => $anioActual
+        ];
+    }
+
+    public function estadisticasCompletas()
+    {
+        // Obtiene el mes y año actual
+        $mesActual = date('m');
+        $anioActual = date('Y');
+
+        // Trae los servicios realizados del mes y año actual
+        $servicios = ServiciosRealizados::with('servicio')
+            ->whereYear('fecha', $anioActual)
+            ->whereMonth('fecha', $mesActual)
+            ->get();
+
+        // Trae los ingresos adicionales del mes y año actual
+        $ingresosAdicionales = IngresosAdicionales::whereYear('fecha', $anioActual)
+            ->whereMonth('fecha', $mesActual)
+            ->get();
+
+        // Calcular ingresos de servicios
+        $ingresosServicios = $servicios->reduce(function ($carry, $item) {
+            return $carry + ($item->total_con_descuento ?? ($item->cantidad * ($item->servicio->precio ?? 0)));
+        }, 0);
+
+        // Calcular ingresos adicionales
+        $ingresosAdicionalesTotal = $ingresosAdicionales->sum('monto');
+
+        // Ingresos totales
+        $ingresosTotales = $ingresosServicios + $ingresosAdicionalesTotal;
+
+        // Calcular pagos a empleados (solo de servicios)
+        $totalPagarEmpleados = $servicios->reduce(function ($carry, $item) {
+            $precio = $item->servicio->precio ?? 0;
+            $porcentaje = $item->servicio->porcentaje_pago_empleado ?? 50;
+            return $carry + ($item->cantidad * $precio * ($porcentaje / 100));
+        }, 0);
+
+        // Ganancia neta
+        $gananciaNeta = $ingresosTotales - $totalPagarEmpleados;
+
+        // Métodos de pago
+        $efectivoServicios = $servicios->sum('monto_efectivo');
+        $transferenciaServicios = $servicios->sum('monto_transferencia');
+        $efectivoAdicionales = $ingresosAdicionales->sum('monto_efectivo');
+        $transferenciaAdicionales = $ingresosAdicionales->sum('monto_transferencia');
+
+        // Totales por método de pago
+        $totalEfectivo = $efectivoServicios + $efectivoAdicionales;
+        $totalTransferencia = $transferenciaServicios + $transferenciaAdicionales;
+
+        // Desglose por tipo de ingreso adicional
+        $accesorios = $ingresosAdicionales->where('tipo', 'accesorio')->sum('monto');
+        $serviciosOcasionales = $ingresosAdicionales->where('tipo', 'servicio_ocasional')->sum('monto');
+        $otros = $ingresosAdicionales->where('tipo', 'otro')->sum('monto');
+
+        return [
+            'resumen_general' => [
+                'ingresos_totales' => $ingresosTotales,
+                'ingresos_servicios' => $ingresosServicios,
+                'ingresos_adicionales' => $ingresosAdicionalesTotal,
+                'total_pagar_empleados' => $totalPagarEmpleados,
+                'ganancia_neta' => $gananciaNeta,
+                'porcentaje_ganancia' => $ingresosTotales > 0 ? ($gananciaNeta / $ingresosTotales) * 100 : 0
+            ],
+            'metodos_pago' => [
+                'efectivo' => [
+                    'total' => $totalEfectivo,
+                    'servicios' => $efectivoServicios,
+                    'adicionales' => $efectivoAdicionales
+                ],
+                'transferencia' => [
+                    'total' => $totalTransferencia,
+                    'servicios' => $transferenciaServicios,
+                    'adicionales' => $transferenciaAdicionales
+                ]
+            ],
+            'ingresos_adicionales_detalle' => [
+                'accesorios' => $accesorios,
+                'servicios_ocasionales' => $serviciosOcasionales,
+                'otros' => $otros,
+                'total_registros' => $ingresosAdicionales->count()
+            ],
+            'servicios_detalle' => [
+                'total_servicios' => $servicios->count(),
+                'cantidad_empleados' => $servicios->unique('empleado_id')->count()
+            ],
             'mes' => $mesActual,
             'anio' => $anioActual
         ];

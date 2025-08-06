@@ -17,5 +17,11 @@ Route::prefix('servicios')->group(function () {
 		Route::get('ganancias-por-metodo-pago', 'gananciasPorMetodoPago');
 		Route::get('total-ganancias-separadas', 'totalGananciasSeparadas');
         Route::put('modificar-servicio/{id}', 'modificarServicio');
+        
+        // Rutas para Ingresos Adicionales
+        Route::post('crear-ingreso-adicional', 'crearIngresoAdicional');
+        Route::get('listar-ingresos-adicionales', 'listarIngresosAdicionales');
+        Route::get('total-ingresos-adicionales', 'totalIngresosAdicionales');
+        Route::get('estadisticas-completas', 'estadisticasCompletas');
 	});
 });

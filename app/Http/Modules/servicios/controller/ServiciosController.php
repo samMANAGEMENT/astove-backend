@@ -4,6 +4,7 @@ namespace App\Http\Modules\servicios\controller;
 
 use App\Http\Controllers\Controller;
 use App\Http\Modules\servicios\request\crearServicioRequest;
+use App\Http\Modules\servicios\Request\crearIngresoAdicionalRequest;
 use Illuminate\Http\Request;
 use App\Http\Modules\servicios\service\ServiciosService;
 
@@ -133,6 +134,47 @@ class ServiciosController extends Controller
         try {
             $totales = $this->serviciosService->totalGananciasSeparadas();
             return response()->json($totales, 200);
+        } catch (\Throwable $th) {
+            return response()->json($th->getMessage(), 500);
+        }
+    }
+
+    // Métodos para Ingresos Adicionales
+    public function crearIngresoAdicional(crearIngresoAdicionalRequest $request)
+    {
+        try {
+            $ingreso = $this->serviciosService->crearIngresoAdicional($request->validated());
+            return response()->json($ingreso, 201);
+        } catch (\Throwable $th) {
+            return response()->json($th->getMessage(), 500);
+        }
+    }
+
+    public function listarIngresosAdicionales()
+    {
+        try {
+            $ingresos = $this->serviciosService->listarIngresosAdicionales();
+            return response()->json($ingresos, 200);
+        } catch (\Throwable $th) {
+            return response()->json($th->getMessage(), 500);
+        }
+    }
+
+    public function totalIngresosAdicionales()
+    {
+        try {
+            $totales = $this->serviciosService->totalIngresosAdicionales();
+            return response()->json($totales, 200);
+        } catch (\Throwable $th) {
+            return response()->json($th->getMessage(), 500);
+        }
+    }
+
+    public function estadisticasCompletas()
+    {
+        try {
+            $estadisticas = $this->serviciosService->estadisticasCompletas();
+            return response()->json($estadisticas, 200);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);
         }
