@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Modules\pagos\models;
+namespace App\Http\Modules\Pagos\Models;
 
 use App\Http\Modules\Operadores\models\Operadores;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class pagos extends Model
+class Pagos extends Model
 {
     use HasFactory;
 

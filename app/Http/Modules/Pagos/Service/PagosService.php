@@ -1,13 +1,13 @@
 <?php
 
-namespace App\http\modules\pagos\service;
+namespace App\Http\Modules\Pagos\Service;
 
-use App\Http\Modules\pagos\models\pagos;
+use App\Http\Modules\Pagos\Models\Pagos;
 use App\Http\Modules\servicios\models\ServiciosRealizados;
 use App\Http\Modules\Operadores\models\Operadores;
 use Illuminate\Support\Facades\DB;
 
-class pagosService
+class PagosService
 {
     public function crearPago($data){
         return pagos::create($data);

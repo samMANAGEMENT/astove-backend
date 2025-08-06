@@ -4,7 +4,7 @@ namespace App\Http\Modules\servicios\controller;
 
 use App\Http\Controllers\Controller;
 use App\Http\Modules\servicios\request\crearServicioRequest;
-use App\Http\Modules\servicios\Request\crearIngresoAdicionalRequest;
+use App\Http\Modules\servicios\request\crearIngresoAdicionalRequest;
 use Illuminate\Http\Request;
 use App\Http\Modules\servicios\service\ServiciosService;
 

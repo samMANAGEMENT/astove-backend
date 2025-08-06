@@ -1,13 +1,13 @@
 <?php
 
-namespace App\http\modules\pagos\controller;
+namespace App\Http\Modules\Pagos\Controller;
 
 use App\Http\Controllers\Controller;
 use App\Http\Modules\pagos\request\crearPagoRequest;
-use App\http\modules\pagos\service\pagosService;
+use App\Http\Modules\Pagos\Service\PagosService;
 use Illuminate\Http\Request;
 
-class pagosController extends Controller 
+class PagosController extends Controller 
 {
     public function __construct(private pagosService $pagosService)
     {

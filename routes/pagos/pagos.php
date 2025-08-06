@@ -1,10 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\http\modules\pagos\controller\pagosController;
+use App\Http\Modules\Pagos\Controller\PagosController;
 
 Route::prefix('pagos')->group(function () {
-	Route::controller(pagosController::class)->group(function () {
+	Route::controller(PagosController::class)->group(function () {
 		Route::post('crear-pago', 'crearPago')->middleware(['permission:crear_pagos']);
 		Route::get('listar-pagos', 'listarPago')->middleware(['entity.access', 'permission:ver_pagos']);
 		Route::get('empleados-completo', 'getPagosEmpleadosCompleto')->middleware(['permission:ver_pagos']);
