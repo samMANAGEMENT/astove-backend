@@ -31,6 +31,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ['nombre' => 'crear_servicios', 'descripcion' => 'Crear servicios', 'modulo' => 'servicios'],
             ['nombre' => 'editar_servicios', 'descripcion' => 'Editar servicios', 'modulo' => 'servicios'],
             ['nombre' => 'eliminar_servicios', 'descripcion' => 'Eliminar servicios', 'modulo' => 'servicios'],
+            ['nombre' => 'eliminar_servicios_realizados', 'descripcion' => 'Eliminar servicios realizados', 'modulo' => 'servicios'],
             
             // Operadores
             ['nombre' => 'ver_operadores', 'descripcion' => 'Ver operadores', 'modulo' => 'operadores'],
@@ -83,7 +84,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'permisos' => [
                     'ver_dashboard_operador',
                     'ver_pagos', 'crear_pagos', 'editar_pagos',
-                    'ver_servicios', 'crear_servicios', 'editar_servicios',
+                    'ver_servicios', 'crear_servicios', 'editar_servicios', 'eliminar_servicios_realizados',
                     'ver_operadores', 'crear_operadores', 'editar_operadores',
                     'ver_productos', 'crear_productos', 'editar_productos',
                     'ver_ventas', 'crear_ventas', 'editar_ventas',

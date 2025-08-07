@@ -179,4 +179,14 @@ class ServiciosController extends Controller
             return response()->json($th->getMessage(), 500);
         }
     }
+
+    public function eliminarServicioRealizado($id)
+    {
+        try {
+            $resultado = $this->serviciosService->eliminarServicioRealizado($id);
+            return response()->json($resultado, 200);
+        } catch (\Throwable $th) {
+            return response()->json(['message' => $th->getMessage()], 500);
+        }
+    }
 }

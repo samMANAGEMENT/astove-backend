@@ -533,4 +533,26 @@ class ServiciosService
             'anio' => $anioActual
         ];
     }
+
+    public function eliminarServicioRealizado(int $id)
+    {
+        $servicioRealizado = ServiciosRealizados::find($id);
+        
+        if (!$servicioRealizado) {
+            throw new \Exception('Servicio realizado no encontrado');
+        }
+
+        // Verificar si el servicio ya está pagado
+        if ($servicioRealizado->pagado) {
+            throw new \Exception('No se puede eliminar un servicio que ya ha sido pagado');
+        }
+
+        // Eliminar el servicio realizado
+        $servicioRealizado->delete();
+
+        return [
+            'message' => 'Servicio realizado eliminado correctamente',
+            'id' => $id
+        ];
+    }
 }

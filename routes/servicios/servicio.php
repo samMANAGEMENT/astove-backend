@@ -23,5 +23,6 @@ Route::prefix('servicios')->group(function () {
         Route::get('listar-ingresos-adicionales', 'listarIngresosAdicionales');
         Route::get('total-ingresos-adicionales', 'totalIngresosAdicionales');
         Route::get('estadisticas-completas', 'estadisticasCompletas');
+        Route::delete('eliminar-servicio-realizado/{id}', 'eliminarServicioRealizado')->middleware(['permission:eliminar_servicios_realizados']);
 	});
 });
