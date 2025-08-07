@@ -30,7 +30,6 @@ class ServiciosRealizados extends Model
     ];
 
     protected $casts = [
-        'fecha' => 'datetime',
         'pagado' => 'boolean',
         'monto_efectivo' => 'decimal:2',
         'monto_transferencia' => 'decimal:2',
