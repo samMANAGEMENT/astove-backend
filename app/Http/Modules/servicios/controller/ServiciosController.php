@@ -4,6 +4,7 @@ namespace App\Http\Modules\servicios\controller;
 
 use App\Http\Controllers\Controller;
 use App\Http\Modules\servicios\request\crearServicioRequest;
+use App\Http\Modules\servicios\request\crearServicioRealizadoRequest;
 use App\Http\Modules\servicios\request\crearIngresoAdicionalRequest;
 use Illuminate\Http\Request;
 use App\Http\Modules\servicios\service\ServiciosService;
@@ -49,20 +50,10 @@ class ServiciosController extends Controller
         }
     }
 
-    public function servicioRealizado(Request $request)
+    public function servicioRealizado(crearServicioRealizadoRequest $request)
     {
         try {
-            $servicio = $this->serviciosService->servicioRealizado($request->only([
-                'empleado_id',
-                'servicio_id',
-                'cantidad',
-                'fecha',
-                'metodo_pago',
-                'monto_efectivo',
-                'monto_transferencia',
-                'total_servicio',
-                'descuento_porcentaje'
-            ]));
+            $servicio = $this->serviciosService->servicioRealizado($request->validated());
             return response()->json($servicio, 201);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);
