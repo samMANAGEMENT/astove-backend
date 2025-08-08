@@ -57,37 +57,71 @@ class ServiciosService
         return ServiciosRealizados::create($data);
     }
 
-    public function listarServiciosRealizados()
+    public function listarServiciosRealizados($page = 1, $perPage = 10, $search = '', $empleadoId = null)
     {
-        return ServiciosRealizados::with(['empleado:id,nombre,apellido', 'servicio:id,nombre,precio'])
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'empleado_id' => $item->empleado_id,
-                    'servicio_id' => $item->servicio_id,
-                    'cantidad' => $item->cantidad,
-                    'fecha' => $item->fecha,
-                    'metodo_pago' => $item->metodo_pago,
-                    'monto_efectivo' => $item->monto_efectivo,
-                    'monto_transferencia' => $item->monto_transferencia,
-                    'total_servicio' => $item->total_servicio,
-                    'descuento_porcentaje' => $item->descuento_porcentaje,
-                    'monto_descuento' => $item->monto_descuento,
-                    'total_con_descuento' => $item->total_con_descuento,
-                    'empleado' => $item->empleado ? [
-                        'id' => $item->empleado->id,
-                        'nombre' => $item->empleado->nombre,
-                        'apellido' => $item->empleado->apellido,
-                    ] : null,
-                    'servicio' => $item->servicio ? [
-                        'id' => $item->servicio->id,
-                        'nombre' => $item->servicio->nombre,
-                        'precio' => $item->servicio->precio,
-                    ] : null,
-                ];
+        $query = ServiciosRealizados::with(['empleado:id,nombre,apellido', 'servicio:id,nombre,precio'])
+            ->orderBy('created_at', 'desc');
+
+        // Aplicar filtro de búsqueda si se proporciona
+        if (!empty($search)) {
+            $query->whereHas('servicio', function ($q) use ($search) {
+                $q->where('nombre', 'like', "%{$search}%");
+            })->orWhereHas('empleado', function ($q) use ($search) {
+                $q->where('nombre', 'like', "%{$search}%")
+                  ->orWhere('apellido', 'like', "%{$search}%");
             });
+        }
+
+        // Aplicar filtro por empleado si se proporciona
+        if ($empleadoId) {
+            $query->where('empleado_id', $empleadoId);
+        }
+
+        // Obtener el total de registros para la paginación
+        $total = $query->count();
+
+        // Aplicar paginación
+        $servicios = $query->skip(($page - 1) * $perPage)
+                          ->take($perPage)
+                          ->get()
+                          ->map(function ($item) {
+                              return [
+                                  'id' => $item->id,
+                                  'empleado_id' => $item->empleado_id,
+                                  'servicio_id' => $item->servicio_id,
+                                  'cantidad' => $item->cantidad,
+                                  'fecha' => $item->fecha,
+                                  'metodo_pago' => $item->metodo_pago,
+                                  'monto_efectivo' => $item->monto_efectivo,
+                                  'monto_transferencia' => $item->monto_transferencia,
+                                  'total_servicio' => $item->total_servicio,
+                                  'descuento_porcentaje' => $item->descuento_porcentaje,
+                                  'monto_descuento' => $item->monto_descuento,
+                                  'total_con_descuento' => $item->total_con_descuento,
+                                  'empleado' => $item->empleado ? [
+                                      'id' => $item->empleado->id,
+                                      'nombre' => $item->empleado->nombre,
+                                      'apellido' => $item->empleado->apellido,
+                                  ] : null,
+                                  'servicio' => $item->servicio ? [
+                                      'id' => $item->servicio->id,
+                                      'nombre' => $item->servicio->nombre,
+                                      'precio' => $item->servicio->precio,
+                                  ] : null,
+                              ];
+                          });
+
+        return [
+            'data' => $servicios,
+            'pagination' => [
+                'current_page' => $page,
+                'per_page' => $perPage,
+                'total' => $total,
+                'total_pages' => ceil($total / $perPage),
+                'from' => ($page - 1) * $perPage + 1,
+                'to' => min($page * $perPage, $total),
+            ]
+        ];
     }
 
     public function calcularPagosEmpleados()
