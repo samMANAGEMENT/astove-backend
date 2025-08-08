@@ -23,6 +23,8 @@ Route::prefix('servicios')->group(function () {
         Route::get('listar-ingresos-adicionales', 'listarIngresosAdicionales');
         Route::get('total-ingresos-adicionales', 'totalIngresosAdicionales');
         Route::get('estadisticas-completas', 'estadisticasCompletas');
+        Route::get('ganancias-diarias', 'gananciasDiarias');
+        Route::get('ganancias-por-rango', 'gananciasPorRango');
         Route::delete('eliminar-servicio-realizado/{id}', 'eliminarServicioRealizado')->middleware(['permission:eliminar_servicios_realizados']);
 	});
 });

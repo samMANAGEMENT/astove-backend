@@ -185,4 +185,27 @@ class ServiciosController extends Controller
             return response()->json(['message' => $th->getMessage()], 500);
         }
     }
+
+    public function gananciasDiarias(Request $request)
+    {
+        try {
+            $fecha = $request->get('fecha', date('Y-m-d'));
+            $ganancias = $this->serviciosService->gananciasDiarias($fecha);
+            return response()->json($ganancias, 200);
+        } catch (\Throwable $th) {
+            return response()->json($th->getMessage(), 500);
+        }
+    }
+
+    public function gananciasPorRango(Request $request)
+    {
+        try {
+            $fechaInicio = $request->get('fecha_inicio', date('Y-m-01'));
+            $fechaFin = $request->get('fecha_fin', date('Y-m-d'));
+            $ganancias = $this->serviciosService->gananciasPorRango($fechaInicio, $fechaFin);
+            return response()->json($ganancias, 200);
+        } catch (\Throwable $th) {
+            return response()->json($th->getMessage(), 500);
+        }
+    }
 }
