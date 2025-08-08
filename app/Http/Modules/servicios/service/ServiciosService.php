@@ -246,8 +246,16 @@ class ServiciosService
         // Suma el total de ingresos adicionales
         $totalIngresosAdicionales = $ingresosAdicionales->sum('monto');
 
-        // Total general (servicios + ingresos adicionales)
-        $total = $totalServicios + $totalIngresosAdicionales;
+        // Trae las ventas de productos del mes y año actual
+        $ventas = \App\Http\Modules\Ventas\Models\Ventas::whereYear('created_at', $anioActual)
+            ->whereMonth('created_at', $mesActual)
+            ->get();
+
+        // Suma el total de ventas (se registra por el costo unitario)
+        $totalVentas = $ventas->sum('total');
+
+        // Total general (servicios + ingresos adicionales + ventas de productos)
+        $total = $totalServicios + $totalIngresosAdicionales + $totalVentas;
 
         return $total;
     }
@@ -277,8 +285,19 @@ class ServiciosService
         // Suma el total de ingresos adicionales
         $totalIngresosAdicionales = $ingresosAdicionales->sum('monto');
 
-        // Ingresos totales (servicios + ingresos adicionales)
-        $ingresosTotales = $ingresosServicios + $totalIngresosAdicionales;
+        // Trae las ventas de productos del mes y año actual
+        $ventas = \App\Http\Modules\Ventas\Models\Ventas::whereYear('created_at', $anioActual)
+            ->whereMonth('created_at', $mesActual)
+            ->get();
+
+        // Suma el total de ventas (se registra por el costo unitario)
+        $totalVentas = $ventas->sum('total');
+
+        // Suma la ganancia total de las ventas (100% ganancia ya que no hay porcentaje de empleado)
+        $gananciaVentas = $ventas->sum('ganancia_total');
+
+        // Ingresos totales (servicios + ingresos adicionales + ventas de productos)
+        $ingresosTotales = $ingresosServicios + $totalIngresosAdicionales + $totalVentas;
 
         // Calcular total a pagar a empleados (solo de servicios, no de ingresos adicionales)
         $totalPagarEmpleados = $servicios->reduce(function ($carry, $item) {
@@ -287,9 +306,10 @@ class ServiciosService
             return $carry + ($item->cantidad * $precio * ($porcentaje / 100));
         }, 0);
 
-        // Calcular ganancia neta (ingresos totales - pagos a empleados)
+        // Calcular ganancia neta (servicios - pagos a empleados) + ingresos adicionales + ganancia ventas
         // Los ingresos adicionales son 100% ganancia ya que no tienen porcentaje de empleado
-        $gananciaNeta = $ingresosTotales - $totalPagarEmpleados;
+        // Las ventas de productos son 100% ganancia ya que no tienen porcentaje de empleado
+        $gananciaNeta = ($ingresosServicios - $totalPagarEmpleados) + $totalIngresosAdicionales + $gananciaVentas;
 
         // Calcular porcentaje de ganancia
         $porcentajeGanancia = $ingresosTotales > 0 ? ($gananciaNeta / $ingresosTotales) * 100 : 0;
@@ -298,6 +318,8 @@ class ServiciosService
             'ingresos_totales' => $ingresosTotales,
             'ingresos_servicios' => $ingresosServicios,
             'ingresos_adicionales' => $totalIngresosAdicionales,
+            'ingresos_ventas' => $totalVentas,
+            'ganancia_ventas' => $gananciaVentas,
             'total_pagar_empleados' => $totalPagarEmpleados,
             'ganancia_neta' => $gananciaNeta,
             'porcentaje_ganancia' => $porcentajeGanancia,
@@ -323,9 +345,14 @@ class ServiciosService
             ->whereMonth('fecha', $mesActual)
             ->get();
 
-        // Calcular totales por método de pago (servicios + ingresos adicionales)
-        $totalEfectivo = $servicios->sum('monto_efectivo') + $ingresosAdicionales->sum('monto_efectivo');
-        $totalTransferencia = $servicios->sum('monto_transferencia') + $ingresosAdicionales->sum('monto_transferencia');
+        // Trae las ventas de productos del mes y año actual
+        $ventas = \App\Http\Modules\Ventas\Models\Ventas::whereYear('created_at', $anioActual)
+            ->whereMonth('created_at', $mesActual)
+            ->get();
+
+        // Calcular totales por método de pago (servicios + ingresos adicionales + ventas)
+        $totalEfectivo = $servicios->sum('monto_efectivo') + $ingresosAdicionales->sum('monto_efectivo') + $ventas->sum('monto_efectivo');
+        $totalTransferencia = $servicios->sum('monto_transferencia') + $ingresosAdicionales->sum('monto_transferencia') + $ventas->sum('monto_transferencia');
         $totalGeneral = $totalEfectivo + $totalTransferencia;
 
         // Calcular ganancias netas por método de pago (solo de servicios)
@@ -352,6 +379,10 @@ class ServiciosService
         // Agregar ganancia de ingresos adicionales (100% ganancia)
         $gananciaEfectivo += $ingresosAdicionales->sum('monto_efectivo');
         $gananciaTransferencia += $ingresosAdicionales->sum('monto_transferencia');
+
+        // Agregar ganancia de ventas de productos (100% ganancia)
+        $gananciaEfectivo += $ventas->sum('monto_efectivo');
+        $gananciaTransferencia += $ventas->sum('monto_transferencia');
 
         return [
             'efectivo' => [
@@ -387,9 +418,14 @@ class ServiciosService
             ->whereMonth('fecha', $mesActual)
             ->get();
 
-        // Calcular totales (servicios + ingresos adicionales)
-        $totalEfectivo = $servicios->sum('monto_efectivo') + $ingresosAdicionales->sum('monto_efectivo');
-        $totalTransferencia = $servicios->sum('monto_transferencia') + $ingresosAdicionales->sum('monto_transferencia');
+        // Trae las ventas de productos del mes y año actual
+        $ventas = \App\Http\Modules\Ventas\Models\Ventas::whereYear('created_at', $anioActual)
+            ->whereMonth('created_at', $mesActual)
+            ->get();
+
+        // Calcular totales (servicios + ingresos adicionales + ventas)
+        $totalEfectivo = $servicios->sum('monto_efectivo') + $ingresosAdicionales->sum('monto_efectivo') + $ventas->sum('monto_efectivo');
+        $totalTransferencia = $servicios->sum('monto_transferencia') + $ingresosAdicionales->sum('monto_transferencia') + $ventas->sum('monto_transferencia');
 
         return [
             'efectivo' => $totalEfectivo,
@@ -601,6 +637,10 @@ class ServiciosService
         $ingresosAdicionales = IngresosAdicionales::whereDate('fecha', $fecha)
             ->get();
 
+        // Trae las ventas de productos de la fecha específica
+        $ventas = \App\Http\Modules\Ventas\Models\Ventas::whereDate('created_at', $fecha)
+            ->get();
+
         // Calcular ingresos de servicios
         $ingresosServicios = $servicios->reduce(function ($carry, $item) {
             return $carry + ($item->total_con_descuento ?? ($item->cantidad * ($item->servicio->precio ?? 0)));
@@ -609,8 +649,11 @@ class ServiciosService
         // Calcular ingresos adicionales
         $ingresosAdicionalesTotal = $ingresosAdicionales->sum('monto');
 
+        // Calcular ingresos de ventas de productos
+        $ingresosVentas = $ventas->sum('total');
+
         // Ingresos totales del día
-        $ingresosTotales = $ingresosServicios + $ingresosAdicionalesTotal;
+        $ingresosTotales = $ingresosServicios + $ingresosAdicionalesTotal + $ingresosVentas;
 
         // Calcular pagos a empleados (solo de servicios)
         $totalPagarEmpleados = $servicios->reduce(function ($carry, $item) {
@@ -619,18 +662,26 @@ class ServiciosService
             return $carry + ($item->cantidad * $precio * ($porcentaje / 100));
         }, 0);
 
-        // Ganancia neta del día
-        $gananciaNeta = $ingresosTotales - $totalPagarEmpleados;
+        // Calcular ganancia de ventas de productos (100% ganancia ya que no hay porcentaje de empleado)
+        $gananciaVentas = $ventas->sum('ganancia_total');
+
+        // Ganancia neta del día (servicios + ingresos adicionales + ventas de productos)
+        // Servicios: ingresos - pagos a empleados
+        // Ingresos adicionales: 100% ganancia (no hay porcentaje de empleado)
+        // Ventas de productos: 100% ganancia (no hay porcentaje de empleado)
+        $gananciaNeta = ($ingresosServicios - $totalPagarEmpleados) + $ingresosAdicionalesTotal + $gananciaVentas;
 
         // Métodos de pago
         $efectivoServicios = $servicios->sum('monto_efectivo');
         $transferenciaServicios = $servicios->sum('monto_transferencia');
         $efectivoAdicionales = $ingresosAdicionales->sum('monto_efectivo');
         $transferenciaAdicionales = $ingresosAdicionales->sum('monto_transferencia');
+        $efectivoVentas = $ventas->sum('monto_efectivo');
+        $transferenciaVentas = $ventas->sum('monto_transferencia');
 
         // Totales por método de pago
-        $totalEfectivo = $efectivoServicios + $efectivoAdicionales;
-        $totalTransferencia = $transferenciaServicios + $transferenciaAdicionales;
+        $totalEfectivo = $efectivoServicios + $efectivoAdicionales + $efectivoVentas;
+        $totalTransferencia = $transferenciaServicios + $transferenciaAdicionales + $transferenciaVentas;
 
         // Desglose por tipo de ingreso adicional
         $accesorios = $ingresosAdicionales->where('tipo', 'accesorio')->sum('monto');
@@ -671,6 +722,7 @@ class ServiciosService
                 'ingresos_totales' => $ingresosTotales,
                 'ingresos_servicios' => $ingresosServicios,
                 'ingresos_adicionales' => $ingresosAdicionalesTotal,
+                'ingresos_ventas' => $ingresosVentas,
                 'total_pagar_empleados' => $totalPagarEmpleados,
                 'ganancia_neta' => $gananciaNeta,
                 'porcentaje_ganancia' => $ingresosTotales > 0 ? ($gananciaNeta / $ingresosTotales) * 100 : 0
@@ -679,12 +731,14 @@ class ServiciosService
                 'efectivo' => [
                     'total' => $totalEfectivo,
                     'servicios' => $efectivoServicios,
-                    'adicionales' => $efectivoAdicionales
+                    'adicionales' => $efectivoAdicionales,
+                    'ventas' => $efectivoVentas
                 ],
                 'transferencia' => [
                     'total' => $totalTransferencia,
                     'servicios' => $transferenciaServicios,
-                    'adicionales' => $transferenciaAdicionales
+                    'adicionales' => $transferenciaAdicionales,
+                    'ventas' => $transferenciaVentas
                 ]
             ],
             'ingresos_adicionales_detalle' => [
@@ -693,11 +747,20 @@ class ServiciosService
                 'otros' => $otros,
                 'total_registros' => $ingresosAdicionales->count()
             ],
+            'ventas_productos' => [
+                'total_ventas' => $ingresosVentas,
+                'ganancia_ventas' => $gananciaVentas,
+                'cantidad_ventas' => $ventas->count(),
+                'efectivo' => $efectivoVentas,
+                'transferencia' => $transferenciaVentas
+            ],
             'servicios_por_empleado' => $serviciosPorEmpleado,
             'estadisticas' => [
                 'total_servicios' => $servicios->count(),
                 'cantidad_empleados' => $servicios->unique('empleado_id')->count(),
-                'promedio_por_servicio' => $servicios->count() > 0 ? $ingresosServicios / $servicios->count() : 0
+                'promedio_por_servicio' => $servicios->count() > 0 ? $ingresosServicios / $servicios->count() : 0,
+                'total_ventas_productos' => $ventas->count(),
+                'promedio_por_venta' => $ventas->count() > 0 ? $ingresosVentas / $ventas->count() : 0
             ]
         ];
     }
