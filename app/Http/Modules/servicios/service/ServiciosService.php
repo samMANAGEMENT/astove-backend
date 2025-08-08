@@ -589,4 +589,197 @@ class ServiciosService
             'id' => $id
         ];
     }
+
+    public function gananciasDiarias($fecha)
+    {
+        // Trae los servicios realizados de la fecha específica
+        $servicios = ServiciosRealizados::with('servicio', 'empleado')
+            ->whereDate('fecha', $fecha)
+            ->get();
+
+        // Trae los ingresos adicionales de la fecha específica
+        $ingresosAdicionales = IngresosAdicionales::whereDate('fecha', $fecha)
+            ->get();
+
+        // Calcular ingresos de servicios
+        $ingresosServicios = $servicios->reduce(function ($carry, $item) {
+            return $carry + ($item->total_con_descuento ?? ($item->cantidad * ($item->servicio->precio ?? 0)));
+        }, 0);
+
+        // Calcular ingresos adicionales
+        $ingresosAdicionalesTotal = $ingresosAdicionales->sum('monto');
+
+        // Ingresos totales del día
+        $ingresosTotales = $ingresosServicios + $ingresosAdicionalesTotal;
+
+        // Calcular pagos a empleados (solo de servicios)
+        $totalPagarEmpleados = $servicios->reduce(function ($carry, $item) {
+            $precio = $item->servicio->precio ?? 0;
+            $porcentaje = $item->servicio->porcentaje_pago_empleado ?? 50;
+            return $carry + ($item->cantidad * $precio * ($porcentaje / 100));
+        }, 0);
+
+        // Ganancia neta del día
+        $gananciaNeta = $ingresosTotales - $totalPagarEmpleados;
+
+        // Métodos de pago
+        $efectivoServicios = $servicios->sum('monto_efectivo');
+        $transferenciaServicios = $servicios->sum('monto_transferencia');
+        $efectivoAdicionales = $ingresosAdicionales->sum('monto_efectivo');
+        $transferenciaAdicionales = $ingresosAdicionales->sum('monto_transferencia');
+
+        // Totales por método de pago
+        $totalEfectivo = $efectivoServicios + $efectivoAdicionales;
+        $totalTransferencia = $transferenciaServicios + $transferenciaAdicionales;
+
+        // Desglose por tipo de ingreso adicional
+        $accesorios = $ingresosAdicionales->where('tipo', 'accesorio')->sum('monto');
+        $serviciosOcasionales = $ingresosAdicionales->where('tipo', 'servicio_ocasional')->sum('monto');
+        $otros = $ingresosAdicionales->where('tipo', 'otro')->sum('monto');
+
+        // Detalles de servicios por empleado
+        $serviciosPorEmpleado = $servicios->groupBy('empleado_id')->map(function ($items, $empleadoId) {
+            $empleado = $items->first()->empleado;
+            $totalEmpleado = $items->reduce(function ($carry, $item) {
+                $precio = $item->servicio->precio ?? 0;
+                $porcentaje = $item->servicio->porcentaje_pago_empleado ?? 50;
+                return $carry + ($item->cantidad * $precio * ($porcentaje / 100));
+            }, 0);
+
+            return [
+                'empleado_id' => $empleadoId,
+                'nombre' => $empleado->nombre ?? 'N/A',
+                'apellido' => $empleado->apellido ?? 'N/A',
+                'cantidad_servicios' => $items->count(),
+                'total_pagar' => $totalEmpleado,
+                'servicios' => $items->map(function ($item) {
+                    return [
+                        'servicio_nombre' => $item->servicio->nombre ?? 'N/A',
+                        'cantidad' => $item->cantidad,
+                        'precio_unitario' => $item->servicio->precio ?? 0,
+                        'porcentaje_empleado' => $item->servicio->porcentaje_pago_empleado ?? 50,
+                        'total_servicio' => $item->total_con_descuento ?? ($item->cantidad * ($item->servicio->precio ?? 0)),
+                        'metodo_pago' => $item->metodo_pago
+                    ];
+                })
+            ];
+        })->values();
+
+        return [
+            'fecha' => $fecha,
+            'resumen_diario' => [
+                'ingresos_totales' => $ingresosTotales,
+                'ingresos_servicios' => $ingresosServicios,
+                'ingresos_adicionales' => $ingresosAdicionalesTotal,
+                'total_pagar_empleados' => $totalPagarEmpleados,
+                'ganancia_neta' => $gananciaNeta,
+                'porcentaje_ganancia' => $ingresosTotales > 0 ? ($gananciaNeta / $ingresosTotales) * 100 : 0
+            ],
+            'metodos_pago' => [
+                'efectivo' => [
+                    'total' => $totalEfectivo,
+                    'servicios' => $efectivoServicios,
+                    'adicionales' => $efectivoAdicionales
+                ],
+                'transferencia' => [
+                    'total' => $totalTransferencia,
+                    'servicios' => $transferenciaServicios,
+                    'adicionales' => $transferenciaAdicionales
+                ]
+            ],
+            'ingresos_adicionales_detalle' => [
+                'accesorios' => $accesorios,
+                'servicios_ocasionales' => $serviciosOcasionales,
+                'otros' => $otros,
+                'total_registros' => $ingresosAdicionales->count()
+            ],
+            'servicios_por_empleado' => $serviciosPorEmpleado,
+            'estadisticas' => [
+                'total_servicios' => $servicios->count(),
+                'cantidad_empleados' => $servicios->unique('empleado_id')->count(),
+                'promedio_por_servicio' => $servicios->count() > 0 ? $ingresosServicios / $servicios->count() : 0
+            ]
+        ];
+    }
+
+    public function gananciasPorRango($fechaInicio, $fechaFin)
+    {
+        // Trae los servicios realizados en el rango de fechas
+        $servicios = ServiciosRealizados::with('servicio')
+            ->whereBetween('fecha', [$fechaInicio, $fechaFin])
+            ->get();
+
+        // Trae los ingresos adicionales en el rango de fechas
+        $ingresosAdicionales = IngresosAdicionales::whereBetween('fecha', [$fechaInicio, $fechaFin])
+            ->get();
+
+        // Agrupar por día
+        $gananciasPorDia = collect();
+        
+        // Generar array de fechas en el rango
+        $fechaActual = \Carbon\Carbon::parse($fechaInicio);
+        $fechaFinCarbon = \Carbon\Carbon::parse($fechaFin);
+        
+        while ($fechaActual->lte($fechaFinCarbon)) {
+            $fechaStr = $fechaActual->format('Y-m-d');
+            
+            // Servicios de este día
+            $serviciosDia = $servicios->filter(function ($item) use ($fechaStr) {
+                return $item->fecha === $fechaStr;
+            });
+            
+            // Ingresos adicionales de este día
+            $ingresosDia = $ingresosAdicionales->filter(function ($item) use ($fechaStr) {
+                return $item->fecha === $fechaStr;
+            });
+            
+            // Calcular totales del día
+            $ingresosServiciosDia = $serviciosDia->reduce(function ($carry, $item) {
+                return $carry + ($item->total_con_descuento ?? ($item->cantidad * ($item->servicio->precio ?? 0)));
+            }, 0);
+            
+            $ingresosAdicionalesDia = $ingresosDia->sum('monto');
+            $ingresosTotalesDia = $ingresosServiciosDia + $ingresosAdicionalesDia;
+            
+            $totalPagarEmpleadosDia = $serviciosDia->reduce(function ($carry, $item) {
+                $precio = $item->servicio->precio ?? 0;
+                $porcentaje = $item->servicio->porcentaje_pago_empleado ?? 50;
+                return $carry + ($item->cantidad * $precio * ($porcentaje / 100));
+            }, 0);
+            
+            $gananciaNetaDia = $ingresosTotalesDia - $totalPagarEmpleadosDia;
+            
+            $gananciasPorDia->push([
+                'fecha' => $fechaStr,
+                'ingresos_totales' => $ingresosTotalesDia,
+                'ingresos_servicios' => $ingresosServiciosDia,
+                'ingresos_adicionales' => $ingresosAdicionalesDia,
+                'total_pagar_empleados' => $totalPagarEmpleadosDia,
+                'ganancia_neta' => $gananciaNetaDia,
+                'cantidad_servicios' => $serviciosDia->count(),
+                'cantidad_ingresos_adicionales' => $ingresosDia->count()
+            ]);
+            
+            $fechaActual->addDay();
+        }
+        
+        // Calcular totales del rango
+        $ingresosTotalesRango = $gananciasPorDia->sum('ingresos_totales');
+        $gananciaNetaRango = $gananciasPorDia->sum('ganancia_neta');
+        $totalServiciosRango = $gananciasPorDia->sum('cantidad_servicios');
+        $totalIngresosAdicionalesRango = $gananciasPorDia->sum('cantidad_ingresos_adicionales');
+        
+        return [
+            'fecha_inicio' => $fechaInicio,
+            'fecha_fin' => $fechaFin,
+            'resumen_rango' => [
+                'ingresos_totales' => $ingresosTotalesRango,
+                'ganancia_neta' => $gananciaNetaRango,
+                'total_servicios' => $totalServiciosRango,
+                'total_ingresos_adicionales' => $totalIngresosAdicionalesRango,
+                'promedio_diario' => $gananciasPorDia->count() > 0 ? $ingresosTotalesRango / $gananciasPorDia->count() : 0
+            ],
+            'ganancias_por_dia' => $gananciasPorDia->toArray()
+        ];
+    }
 }
