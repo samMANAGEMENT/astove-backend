@@ -34,9 +34,11 @@ class DatabaseSeeder extends Seeder
             'estado' => 'true'
         ]);
 
-        // Ejecutar el seeder de servicios
+        // Ejecutar los seeders
         $this->call([
             ServiciosSeeder::class,
+            ProductosSeeder::class,
+            RolesAndPermissionsSeeder::class,
         ]);
     }
 }
