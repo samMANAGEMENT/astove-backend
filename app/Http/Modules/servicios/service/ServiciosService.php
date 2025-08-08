@@ -845,4 +845,20 @@ class ServiciosService
             'ganancias_por_dia' => $gananciasPorDia->toArray()
         ];
     }
+
+    public function eliminarIngresoAdicional(int $id)
+    {
+        $ingreso = IngresosAdicionales::find($id);
+        
+        if (!$ingreso) {
+            throw new \Exception('El ingreso adicional no existe');
+        }
+        
+        $ingreso->delete();
+        
+        return [
+            'message' => 'Ingreso adicional eliminado exitosamente',
+            'id' => $id
+        ];
+    }
 }

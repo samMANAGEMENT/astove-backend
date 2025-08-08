@@ -25,6 +25,7 @@ Route::prefix('servicios')->group(function () {
         Route::get('estadisticas-completas', 'estadisticasCompletas');
         Route::get('ganancias-diarias', 'gananciasDiarias');
         Route::get('ganancias-por-rango', 'gananciasPorRango');
+        Route::delete('eliminar-ingreso-adicional/{id}', 'eliminarIngresoAdicional');
         Route::delete('eliminar-servicio-realizado/{id}', 'eliminarServicioRealizado')->middleware(['permission:eliminar_servicios_realizados']);
 	});
 });

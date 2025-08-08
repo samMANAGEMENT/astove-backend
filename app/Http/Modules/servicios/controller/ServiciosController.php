@@ -176,6 +176,16 @@ class ServiciosController extends Controller
         }
     }
 
+    public function eliminarIngresoAdicional($id)
+    {
+        try {
+            $resultado = $this->serviciosService->eliminarIngresoAdicional($id);
+            return response()->json($resultado, 200);
+        } catch (\Throwable $th) {
+            return response()->json(['message' => $th->getMessage()], 500);
+        }
+    }
+
     public function eliminarServicioRealizado($id)
     {
         try {
