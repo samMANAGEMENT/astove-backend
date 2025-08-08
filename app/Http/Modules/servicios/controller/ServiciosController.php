@@ -60,10 +60,15 @@ class ServiciosController extends Controller
         }
     }
 
-    public function listarServiciosRealizados()
+    public function listarServiciosRealizados(Request $request)
     {
         try {
-            $servicio = $this->serviciosService->listarServiciosRealizados();
+            $page = $request->get('page', 1);
+            $perPage = $request->get('per_page', 10);
+            $search = $request->get('search', '');
+            $empleadoId = $request->get('empleado_id');
+            
+            $servicio = $this->serviciosService->listarServiciosRealizados($page, $perPage, $search, $empleadoId);
             return response()->json($servicio, 200);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);
