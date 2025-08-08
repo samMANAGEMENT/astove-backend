@@ -8,6 +8,7 @@ Route::prefix('ventas')->group(function () {
         Route::post('crear-venta', 'crearVenta');
         Route::get('listar-ventas', 'listarVentas');
         Route::get('obtener-venta/{id}', 'obtenerVenta');
+        Route::delete('eliminar-venta/{id}', 'eliminarVenta');
         Route::get('estadisticas', 'obtenerEstadisticas');
     });
 });

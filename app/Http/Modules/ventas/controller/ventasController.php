@@ -63,6 +63,21 @@ class VentasController extends Controller
         }
     }
 
+    public function eliminarVenta($id): JsonResponse
+    {
+        try {
+            $this->ventasService->eliminarVenta($id);
+            return response()->json([
+                'message' => 'Venta eliminada exitosamente'
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Error al eliminar la venta',
+                'error' => $th->getMessage()
+            ], 500);
+        }
+    }
+
     public function obtenerEstadisticas(): JsonResponse
     {
         try {
