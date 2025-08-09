@@ -449,13 +449,49 @@ class ServiciosService
         if (abs($sumaMontos - $montoTotal) > 0.01) {
             throw new \Exception('La suma de efectivo y transferencia debe ser igual al monto total');
         }
+
+        // Si es un servicio ocasional y se proporciona operador_id, crear también el servicio realizado
+        if (($data['tipo'] ?? '') === 'servicio_ocasional' && !empty($data['operador_id'])) {
+            // Crear un servicio temporal para el servicio ocasional
+            $servicioOcasional = Servicios::firstOrCreate(
+                ['nombre' => 'Servicio Ocasional'],
+                [
+                    'nombre' => 'Servicio Ocasional',
+                    'precio' => $montoTotal,
+                    'porcentaje_pago_empleado' => 40, // 40% para el operador
+                    'descripcion' => 'Servicio ocasional registrado desde ingresos adicionales'
+                ]
+            );
+
+            // Crear el servicio realizado
+            $servicioRealizado = ServiciosRealizados::create([
+                'servicio_id' => $servicioOcasional->id,
+                'empleado_id' => $data['operador_id'],
+                'cantidad' => 1,
+                'fecha' => $data['fecha'],
+                'metodo_pago' => $data['metodo_pago'] === 'mixto' ? 'efectivo' : $data['metodo_pago'],
+                'monto_efectivo' => $montoEfectivo,
+                'monto_transferencia' => $montoTransferencia,
+                'total_servicio' => $montoTotal,
+                'descuento_porcentaje' => 0,
+                'monto_descuento' => 0,
+                'total_con_descuento' => $montoTotal
+            ]);
+
+            // Agregar el ID del servicio realizado al ingreso adicional
+            $data['servicio_realizado_id'] = $servicioRealizado->id;
+        }
         
         return IngresosAdicionales::create($data);
     }
 
     public function listarIngresosAdicionales()
     {
-        return IngresosAdicionales::with(['empleado:id,nombre,apellido'])
+        return IngresosAdicionales::with([
+            'empleado:id,nombre,apellido',
+            'operador:id,nombre,apellido',
+            'servicioRealizado.servicio:id,nombre,precio'
+        ])
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($item) {
@@ -470,11 +506,26 @@ class ServiciosService
                     'categoria' => $item->categoria,
                     'descripcion' => $item->descripcion,
                     'empleado_id' => $item->empleado_id,
+                    'operador_id' => $item->operador_id,
+                    'servicio_realizado_id' => $item->servicio_realizado_id,
                     'fecha' => $item->fecha,
                     'empleado' => $item->empleado ? [
                         'id' => $item->empleado->id,
                         'nombre' => $item->empleado->nombre,
                         'apellido' => $item->empleado->apellido,
+                    ] : null,
+                    'operador' => $item->operador ? [
+                        'id' => $item->operador->id,
+                        'nombre' => $item->operador->nombre,
+                        'apellido' => $item->operador->apellido,
+                    ] : null,
+                    'servicio_realizado' => $item->servicioRealizado ? [
+                        'id' => $item->servicioRealizado->id,
+                        'servicio' => $item->servicioRealizado->servicio ? [
+                            'id' => $item->servicioRealizado->servicio->id,
+                            'nombre' => $item->servicioRealizado->servicio->nombre,
+                            'precio' => $item->servicioRealizado->servicio->precio,
+                        ] : null,
                     ] : null,
                 ];
             });

@@ -31,6 +31,8 @@ class crearIngresoAdicionalRequest extends FormRequest
             'categoria' => 'nullable|string|max:255',
             'descripcion' => 'nullable|string',
             'empleado_id' => 'nullable|exists:operadores,id',
+            'operador_id' => 'nullable|exists:operadores,id',
+            'servicio_realizado_id' => 'nullable|exists:servicios_realizados,id',
             'fecha' => 'required|date'
         ];
     }
