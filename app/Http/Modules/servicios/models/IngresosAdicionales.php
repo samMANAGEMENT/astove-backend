@@ -22,6 +22,8 @@ class IngresosAdicionales extends Model
         'categoria',
         'descripcion',
         'empleado_id',
+        'operador_id',
+        'servicio_realizado_id',
         'fecha'
     ];
 
@@ -32,9 +34,21 @@ class IngresosAdicionales extends Model
         'monto_transferencia' => 'decimal:2'
     ];
 
-    // Relación con el modelo Empleado
+    // Relación con el modelo Empleado (quien registra)
     public function empleado()
     {
         return $this->belongsTo(Operadores::class, 'empleado_id');
+    }
+
+    // Relación con el modelo Operador (quien realiza el servicio)
+    public function operador()
+    {
+        return $this->belongsTo(Operadores::class, 'operador_id');
+    }
+
+    // Relación con el servicio realizado
+    public function servicioRealizado()
+    {
+        return $this->belongsTo(ServiciosRealizados::class, 'servicio_realizado_id');
     }
 } 
