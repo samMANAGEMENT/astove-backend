@@ -34,4 +34,5 @@ Route::middleware('auth:sanctum')->group(function () {
     require __DIR__ . '/roles/roles.php';
     require __DIR__ . '/analytics/analytics.php';
     require __DIR__ . '/productos/productos.php';
+    require __DIR__ . '/gastos/gastos.php';
 });
