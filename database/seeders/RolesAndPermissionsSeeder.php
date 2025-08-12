@@ -83,7 +83,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'descripcion' => 'Supervisor con acceso a gestión de entidad',
                 'permisos' => [
                     'ver_dashboard_operador',
-                    'ver_pagos', 'crear_pagos', 'editar_pagos',
+                    'ver_pagos', 'crear_pagos', 'editar_pagos', 'eliminar_pagos',
                     'ver_servicios', 'crear_servicios', 'editar_servicios', 'eliminar_servicios_realizados',
                     'ver_operadores', 'crear_operadores', 'editar_operadores',
                     'ver_productos', 'crear_productos', 'editar_productos',

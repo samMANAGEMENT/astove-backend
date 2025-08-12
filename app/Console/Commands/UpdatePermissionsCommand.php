@@ -29,30 +29,44 @@ class UpdatePermissionsCommand extends Command
     {
         $this->info('Actualizando permisos...');
 
-        // Crear el nuevo permiso si no existe
-        $permiso = Permiso::firstOrCreate(
-            ['nombre' => 'eliminar_servicios_realizados'],
+        // Lista de permisos a crear/actualizar
+        $permisos = [
             [
                 'nombre' => 'eliminar_servicios_realizados',
                 'descripcion' => 'Eliminar servicios realizados',
                 'modulo' => 'servicios'
+            ],
+            [
+                'nombre' => 'eliminar_pagos',
+                'descripcion' => 'Eliminar pagos',
+                'modulo' => 'pagos'
             ]
-        );
+        ];
 
-        $this->info("Permiso 'eliminar_servicios_realizados' creado/actualizado.");
+        foreach ($permisos as $permisoData) {
+            $permiso = Permiso::firstOrCreate(
+                ['nombre' => $permisoData['nombre']],
+                $permisoData
+            );
 
-        // Asignar el permiso a admin y supervisor
+            $this->info("Permiso '{$permisoData['nombre']}' creado/actualizado.");
+        }
+
+        // Asignar permisos a roles
         $adminRole = Role::where('nombre', 'admin')->first();
         $supervisorRole = Role::where('nombre', 'supervisor')->first();
 
+        // Obtener todos los permisos de la lista
+        $permisosIds = Permiso::whereIn('nombre', array_column($permisos, 'nombre'))->pluck('id')->toArray();
+
         if ($adminRole) {
-            $adminRole->permisos()->syncWithoutDetaching([$permiso->id]);
-            $this->info("Permiso asignado al rol 'admin'.");
+            $adminRole->permisos()->syncWithoutDetaching($permisosIds);
+            $this->info("Permisos asignados al rol 'admin'.");
         }
 
         if ($supervisorRole) {
-            $supervisorRole->permisos()->syncWithoutDetaching([$permiso->id]);
-            $this->info("Permiso asignado al rol 'supervisor'.");
+            $supervisorRole->permisos()->syncWithoutDetaching($permisosIds);
+            $this->info("Permisos asignados al rol 'supervisor'.");
         }
 
         $this->info('Permisos actualizados correctamente.');
