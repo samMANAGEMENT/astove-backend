@@ -99,7 +99,7 @@ class PagosService
     public function getEstadoPagosEmpleados()
     {
         // Obtener todos los empleados que tienen servicios realizados
-        $empleados = \App\Http\Modules\Operadores\models\Operadores::with(['serviciosRealizados' => function($query) {
+        $empleados = \App\Http\Modules\Operadores\Models\Operadores::with(['serviciosRealizados' => function($query) {
             $query->with('servicio:id,nombre,porcentaje_pago_empleado,precio');
         }])->get();
 
