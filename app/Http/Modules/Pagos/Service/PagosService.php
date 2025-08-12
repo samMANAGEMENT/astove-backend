@@ -6,6 +6,7 @@ use App\Http\Modules\Pagos\Models\Pagos;
 use App\Http\Modules\servicios\models\ServiciosRealizados;
 use App\Http\Modules\Operadores\models\Operadores;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class PagosService
 {
@@ -183,11 +184,21 @@ class PagosService
             return $carry + ($item->cantidad * $precio * ($porcentaje / 100));
         }, 0);
 
-        $gananciaNeta = $ingresosTotales - $totalPagarEmpleados;
+        // Obtener total de gastos del mes
+        $user = Auth::user();
+        $entidadId = $user->obtenerEntidadId();
+        
+        $totalGastos = \App\Http\Modules\Gastos\models\GastosOperativos::where('entidad_id', $entidadId)
+            ->whereYear('fecha', $anioActual)
+            ->whereMonth('fecha', $mesActual)
+            ->sum('monto');
+
+        $gananciaNeta = $ingresosTotales - $totalPagarEmpleados - $totalGastos;
 
         return [
             'ingresos_totales' => $ingresosTotales,
             'total_pagar_empleados' => $totalPagarEmpleados,
+            'total_gastos' => $totalGastos,
             'ganancia_neta' => $gananciaNeta,
             'porcentaje_ganancia' => $ingresosTotales > 0 ? ($gananciaNeta / $ingresosTotales) * 100 : 0,
             'mes' => $mesActual,
