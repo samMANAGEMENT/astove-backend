@@ -3,7 +3,7 @@
 namespace App\Http\Modules\Auth\service;
 
 use App\Http\Modules\Auth\models\Auth;
-use App\Http\Modules\Operadores\models\Operadores;
+use App\Http\Modules\Operadores\Models\Operadores;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
