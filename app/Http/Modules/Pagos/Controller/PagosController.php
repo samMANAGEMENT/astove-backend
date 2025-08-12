@@ -105,4 +105,14 @@ class PagosController extends Controller
             return response()->json(['error' => $th->getMessage()], 500);
         }
     }
+
+    public function eliminarPago($id)
+    {
+        try {
+            $resultado = $this->pagosService->eliminarPago($id);
+            return response()->json($resultado, 200);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
 }

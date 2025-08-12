@@ -13,5 +13,6 @@ Route::prefix('pagos')->group(function () {
 		Route::get('servicios-pendientes/{empleadoId}', 'getServiciosPendientesEmpleado')->middleware(['permission:ver_pagos']);
 		Route::get('servicios-empleado/{empleadoId}', 'getServiciosEmpleado')->middleware(['permission:ver_servicios_empleado']);
 		Route::get('estado-empleados', 'getEstadoPagosEmpleados')->middleware(['permission:ver_pagos']);
+		Route::delete('eliminar-pago/{id}', 'eliminarPago')->middleware(['permission:eliminar_pagos']);
 	});
 });

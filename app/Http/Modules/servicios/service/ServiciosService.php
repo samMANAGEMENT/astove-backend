@@ -17,7 +17,9 @@ class ServiciosService
 
     public function listarServicio()
     {
-        return Servicios::orderBy('id', 'asc')->get();
+        return Servicios::where('nombre', 'not like', 'Servicio Ocasional%')
+            ->orderBy('id', 'asc')
+            ->get();
     }
 
     public function modificarServicio(array $data, int $id)
@@ -238,12 +240,13 @@ class ServiciosService
             return $carry + ($item->total_con_descuento ?? ($item->cantidad * ($item->servicio->precio ?? 0)));
         }, 0);
 
-        // Trae los ingresos adicionales del mes y año actual
+        // Trae los ingresos adicionales del mes y año actual (excluyendo servicios ocasionales)
         $ingresosAdicionales = IngresosAdicionales::whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual)
+            ->where('tipo', '!=', 'servicio_ocasional')
             ->get();
 
-        // Suma el total de ingresos adicionales
+        // Suma el total de ingresos adicionales (excluyendo servicios ocasionales)
         $totalIngresosAdicionales = $ingresosAdicionales->sum('monto');
 
         // Trae las ventas de productos del mes y año actual
@@ -277,12 +280,13 @@ class ServiciosService
             return $carry + ($item->total_con_descuento ?? ($item->cantidad * ($item->servicio->precio ?? 0)));
         }, 0);
 
-        // Trae los ingresos adicionales del mes y año actual
+        // Trae los ingresos adicionales del mes y año actual (excluyendo servicios ocasionales)
         $ingresosAdicionales = IngresosAdicionales::whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual)
+            ->where('tipo', '!=', 'servicio_ocasional')
             ->get();
 
-        // Suma el total de ingresos adicionales
+        // Suma el total de ingresos adicionales (excluyendo servicios ocasionales)
         $totalIngresosAdicionales = $ingresosAdicionales->sum('monto');
 
         // Trae las ventas de productos del mes y año actual
@@ -340,9 +344,10 @@ class ServiciosService
             ->whereMonth('fecha', $mesActual)
             ->get();
 
-        // Trae los ingresos adicionales del mes y año actual
+        // Trae los ingresos adicionales del mes y año actual (excluyendo servicios ocasionales)
         $ingresosAdicionales = IngresosAdicionales::whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual)
+            ->where('tipo', '!=', 'servicio_ocasional')
             ->get();
 
         // Trae las ventas de productos del mes y año actual
@@ -413,9 +418,10 @@ class ServiciosService
             ->whereMonth('fecha', $mesActual)
             ->get();
 
-        // Trae los ingresos adicionales del mes y año actual
+        // Trae los ingresos adicionales del mes y año actual (excluyendo servicios ocasionales)
         $ingresosAdicionales = IngresosAdicionales::whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual)
+            ->where('tipo', '!=', 'servicio_ocasional')
             ->get();
 
         // Trae las ventas de productos del mes y año actual
@@ -440,6 +446,8 @@ class ServiciosService
     public function crearIngresoAdicional(array $data)
     {
         // Validar que los montos sumen el total
+        
+        // Validar que los montos sumen el total
         $montoEfectivo = $data['monto_efectivo'] ?? 0;
         $montoTransferencia = $data['monto_transferencia'] ?? 0;
         $montoTotal = $data['monto'] ?? 0;
@@ -452,16 +460,15 @@ class ServiciosService
 
         // Si es un servicio ocasional y se proporciona operador_id, crear también el servicio realizado
         if (($data['tipo'] ?? '') === 'servicio_ocasional' && !empty($data['operador_id'])) {
-            // Crear un servicio temporal para el servicio ocasional
-            $servicioOcasional = Servicios::firstOrCreate(
-                ['nombre' => 'Servicio Ocasional'],
-                [
-                    'nombre' => 'Servicio Ocasional',
-                    'precio' => $montoTotal,
-                    'porcentaje_pago_empleado' => 40, // 40% para el operador
-                    'descripcion' => 'Servicio ocasional registrado desde ingresos adicionales'
-                ]
-            );
+            // Crear un servicio único para cada servicio ocasional
+            $nombreServicioOcasional = 'Servicio Ocasional - ' . $data['concepto'] . ' - ' . date('Y-m-d H:i:s');
+            $servicioOcasional = Servicios::create([
+                'nombre' => $nombreServicioOcasional,
+                'precio' => $montoTotal,
+                'porcentaje_pago_empleado' => 40, // 40% para el operador
+                'descripcion' => 'Servicio ocasional registrado desde ingresos adicionales: ' . $data['concepto'],
+                'estado' => true
+            ]);
 
             // Crear el servicio realizado
             $servicioRealizado = ServiciosRealizados::create([
@@ -578,9 +585,10 @@ class ServiciosService
             ->whereMonth('fecha', $mesActual)
             ->get();
 
-        // Trae los ingresos adicionales del mes y año actual
+        // Trae los ingresos adicionales del mes y año actual (excluyendo servicios ocasionales)
         $ingresosAdicionales = IngresosAdicionales::whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual)
+            ->where('tipo', '!=', 'servicio_ocasional')
             ->get();
 
         // Calcular ingresos de servicios
@@ -684,8 +692,9 @@ class ServiciosService
             ->whereDate('fecha', $fecha)
             ->get();
 
-        // Trae los ingresos adicionales de la fecha específica
+        // Trae los ingresos adicionales de la fecha específica (excluyendo servicios ocasionales)
         $ingresosAdicionales = IngresosAdicionales::whereDate('fecha', $fecha)
+            ->where('tipo', '!=', 'servicio_ocasional')
             ->get();
 
         // Trae las ventas de productos de la fecha específica
@@ -823,8 +832,9 @@ class ServiciosService
             ->whereBetween('fecha', [$fechaInicio, $fechaFin])
             ->get();
 
-        // Trae los ingresos adicionales en el rango de fechas
+        // Trae los ingresos adicionales en el rango de fechas (excluyendo servicios ocasionales)
         $ingresosAdicionales = IngresosAdicionales::whereBetween('fecha', [$fechaInicio, $fechaFin])
+            ->where('tipo', '!=', 'servicio_ocasional')
             ->get();
 
         // Agrupar por día
@@ -903,6 +913,20 @@ class ServiciosService
         
         if (!$ingreso) {
             throw new \Exception('El ingreso adicional no existe');
+        }
+        
+        // Si es un servicio ocasional, eliminar también el servicio realizado y el servicio
+        if ($ingreso->tipo === 'servicio_ocasional' && $ingreso->servicio_realizado_id) {
+            $servicioRealizado = ServiciosRealizados::find($ingreso->servicio_realizado_id);
+            if ($servicioRealizado) {
+                // Eliminar el servicio realizado
+                $servicioRealizado->delete();
+                
+                // Eliminar el servicio ocasional
+                if ($servicioRealizado->servicio) {
+                    $servicioRealizado->servicio->delete();
+                }
+            }
         }
         
         $ingreso->delete();

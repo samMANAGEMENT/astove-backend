@@ -308,4 +308,28 @@ class PagosService
                 ];
             });
     }
+
+    public function eliminarPago($id)
+    {
+        $pago = Pagos::find($id);
+        
+        if (!$pago) {
+            throw new \Exception('El pago no existe');
+        }
+
+        // Verificar si el pago está relacionado con servicios realizados
+        $serviciosRelacionados = ServiciosRealizados::where('pago_id', $id)->count();
+        
+        if ($serviciosRelacionados > 0) {
+            throw new \Exception('No se puede eliminar un pago que tiene servicios asociados. Primero debe desmarcar los servicios como pagados.');
+        }
+
+        // Eliminar el pago
+        $pago->delete();
+
+        return [
+            'message' => 'Pago eliminado exitosamente',
+            'id' => $id
+        ];
+    }
 }
