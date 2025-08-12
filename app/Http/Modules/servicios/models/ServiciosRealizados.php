@@ -4,7 +4,7 @@ namespace App\Http\Modules\servicios\models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Http\Modules\Operadores\models\Operadores;
+use App\Http\Modules\Operadores\Models\Operadores;
 use App\Http\Modules\servicios\models\Servicios;
 
 class ServiciosRealizados extends Model
