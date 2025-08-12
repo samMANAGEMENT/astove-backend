@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Modules\Operadores\models;
+namespace App\Http\Modules\Operadores\Models;
 
 use App\Http\Modules\Cargos\models\Cargos;
 use App\Http\Modules\Entidades\models\Entidades;
