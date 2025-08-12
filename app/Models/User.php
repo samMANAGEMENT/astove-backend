@@ -47,7 +47,7 @@ class User extends Authenticatable
 
     public function operador()
     {
-        return $this->belongsTo(\App\Http\Modules\Operadores\models\Operadores::class, 'operador_id');
+        return $this->belongsTo(\App\Http\Modules\Operadores\Models\Operadores::class, 'operador_id');
     }
 
     public function role()
