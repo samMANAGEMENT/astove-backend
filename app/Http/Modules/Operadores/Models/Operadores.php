@@ -42,6 +42,6 @@ class Operadores extends Model
 
     public function pagos()
     {
-        return $this->hasMany(\App\Http\Modules\pagos\models\pagos::class, 'empleado_id');
+        return $this->hasMany(\App\Http\Modules\Pagos\Models\Pagos::class, 'empleado_id');
     }
 }

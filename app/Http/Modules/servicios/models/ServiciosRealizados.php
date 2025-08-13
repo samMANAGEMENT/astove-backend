@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Http\Modules\Operadores\Models\Operadores;
 use App\Http\Modules\servicios\models\Servicios;
+use App\Traits\PostgresBooleanTrait;
+use Illuminate\Support\Facades\DB;
 
 class ServiciosRealizados extends Model
 {
-    use HasFactory;
+    use HasFactory, PostgresBooleanTrait;
 
     protected $table = 'servicios_realizados';
 
@@ -55,8 +57,34 @@ public function servicio()
 // Relación con el modelo Pago
 public function pago()
 {
-    return $this->belongsTo(\App\Http\Modules\pagos\models\pagos::class, 'pago_id');
+    return $this->belongsTo(\App\Http\Modules\Pagos\Models\Pagos::class, 'pago_id');
+}
+
+/**
+ * Actualizar el estado de pagado usando SQL raw para PostgreSQL
+ */
+public static function updatePagado($empleadoId, $pagado = true, $pagoId = null)
+{
+    $pagadoValue = $pagado ? DB::raw('TRUE') : DB::raw('FALSE');
+    
+    $query = self::where('empleado_id', $empleadoId)
+                ->whereRaw('pagado IS FALSE');
+    
+    return $query->update([
+        'pagado' => $pagadoValue,
+        'pago_id' => $pagoId
+    ]);
+}
+
+/**
+ * Actualizar servicios específicos como pagados
+ */
+public static function updateServiciosPagados($serviciosIds, $pagoId)
+{
+    return self::whereIn('id', $serviciosIds)->update([
+        'pagado' => DB::raw('TRUE'),
+        'pago_id' => $pagoId
+    ]);
 }
 
 }
-
