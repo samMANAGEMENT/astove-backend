@@ -3,12 +3,13 @@
 namespace App\Http\Modules\Pagos\Models;
 
 use App\Http\Modules\Operadores\models\Operadores;
+use App\Traits\PostgresBooleanTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Pagos extends Model
 {
-    use HasFactory;
+    use HasFactory, PostgresBooleanTrait;
 
     protected $fillable = [
         'empleado_id',

@@ -11,11 +11,11 @@ use Illuminate\Support\Facades\Auth;
 class PagosService
 {
     public function crearPago($data){
-        return pagos::create($data);
+        return Pagos::create($data);
     }
 
     public function listarPago($userEntityId = null){
-        $query = pagos::with('empleado:id,nombre,apellido,entidad_id');
+        $query = Pagos::with('empleado:id,nombre,apellido,entidad_id');
         
         // Si se proporciona un ID de entidad, filtrar por esa entidad
         if ($userEntityId) {
@@ -52,7 +52,7 @@ class PagosService
     {
         // Obtener todos los empleados con servicios no pagados
         $empleados = Operadores::with(['serviciosRealizados' => function($query) {
-            $query->whereRaw('pagado = ?', [false])
+            $query->whereRaw('pagado IS FALSE')
                   ->with('servicio:id,nombre,porcentaje_pago_empleado,precio');
         }])->get();
 
@@ -138,7 +138,7 @@ class PagosService
             }
             
             // Obtener pagos realizados a este empleado
-            $pagosRealizados = pagos::where('empleado_id', $empleado->id)->sum('monto');
+            $pagosRealizados = Pagos::where('empleado_id', $empleado->id)->sum('monto');
             
             $saldoPendiente = $totalPendiente; // Usar el total pendiente calculado
             $estadoPago = $saldoPendiente <= 0 ? 'pagado' : ($pagosRealizados > 0 ? 'parcial' : 'pendiente');
@@ -230,7 +230,7 @@ class PagosService
             }
             
             // Crear el pago
-            $pago = pagos::create([
+            $pago = Pagos::create([
                 'empleado_id' => $empleadoId,
                 'monto' => $monto,
                 'fecha' => now(),
@@ -245,20 +245,11 @@ class PagosService
             // Marcar servicios como pagados
             if ($tipoPago === 'total') {
                 // Marcar todos los servicios no pagados del empleado como pagados
-                ServiciosRealizados::where('empleado_id', $empleadoId)
-                    ->whereRaw('pagado = ?', [false])
-                    ->update([
-                        'pagado' => true,
-                        'pago_id' => $pago->id
-                    ]);
+                ServiciosRealizados::updatePagado($empleadoId, true, $pago->id);
             } else {
                 // Marcar servicios específicos como pagados
                 if ($serviciosIncluidos) {
-                    ServiciosRealizados::whereIn('id', $serviciosIncluidos)
-                        ->update([
-                            'pagado' => true,
-                            'pago_id' => $pago->id
-                        ]);
+                    ServiciosRealizados::updateServiciosPagados($serviciosIncluidos, $pago->id);
                 }
             }
             
@@ -275,7 +266,7 @@ class PagosService
     {
         // Obtener servicios no pagados del empleado
         return ServiciosRealizados::where('empleado_id', $empleadoId)
-            ->whereRaw('pagado = ?', [false])
+            ->whereRaw('pagado IS FALSE')
             ->with('servicio:id,nombre,porcentaje_pago_empleado,precio')
             ->get()
             ->map(function($servicio) {

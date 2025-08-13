@@ -5,7 +5,7 @@ namespace App\Http\Modules\Analytics\service;
 use App\Http\Modules\servicios\models\ServiciosRealizados;
 use App\Http\Modules\servicios\models\Servicios;
 use App\Http\Modules\Operadores\models\Operadores;
-use App\Http\Modules\pagos\models\pagos;
+use App\Http\Modules\Pagos\Models\Pagos;
 use App\Http\Modules\Entidades\models\Entidades;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
