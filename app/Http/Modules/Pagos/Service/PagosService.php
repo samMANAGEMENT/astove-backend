@@ -4,7 +4,7 @@ namespace App\Http\Modules\Pagos\Service;
 
 use App\Http\Modules\Pagos\Models\Pagos;
 use App\Http\Modules\servicios\models\ServiciosRealizados;
-use App\Http\Modules\Operadores\models\Operadores;
+use App\Http\Modules\Operadores\Models\Operadores;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
