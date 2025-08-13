@@ -56,6 +56,12 @@ class ServiciosService
         $data['monto_descuento'] = $montoDescuento;
         $data['total_con_descuento'] = $totalConDescuento;
         
+        // Asegurar que la fecha tenga la hora correcta en la zona horaria local
+        if (isset($data['fecha']) && !str_contains($data['fecha'], ' ')) {
+            // Si solo se envía la fecha (YYYY-MM-DD), agregar la hora actual
+            $data['fecha'] = $data['fecha'] . ' ' . date('H:i:s');
+        }
+        
         return ServiciosRealizados::create($data);
     }
 
@@ -456,6 +462,12 @@ class ServiciosService
         $sumaMontos = $montoEfectivo + $montoTransferencia;
         if (abs($sumaMontos - $montoTotal) > 0.01) {
             throw new \Exception('La suma de efectivo y transferencia debe ser igual al monto total');
+        }
+
+        // Asegurar que la fecha tenga la hora correcta en la zona horaria local
+        if (isset($data['fecha']) && !str_contains($data['fecha'], ' ')) {
+            // Si solo se envía la fecha (YYYY-MM-DD), agregar la hora actual
+            $data['fecha'] = $data['fecha'] . ' ' . date('H:i:s');
         }
 
         // Si es un servicio ocasional y se proporciona operador_id, crear también el servicio realizado

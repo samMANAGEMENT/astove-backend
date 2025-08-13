@@ -13,6 +13,12 @@ class GastosService
         $user = Auth::user();
         $entidadId = $user->obtenerEntidadId();
 
+        // Asegurar que la fecha tenga la hora correcta en la zona horaria local
+        if (isset($data['fecha']) && !str_contains($data['fecha'], ' ')) {
+            // Si solo se envía la fecha (YYYY-MM-DD), agregar la hora actual
+            $data['fecha'] = $data['fecha'] . ' ' . date('H:i:s');
+        }
+
         return GastosOperativos::create([
             'entidad_id' => $entidadId,
             'descripcion' => $data['descripcion'],
@@ -59,6 +65,12 @@ class GastosService
 
         if (!$gasto) {
             throw new \Exception('Gasto no encontrado');
+        }
+
+        // Asegurar que la fecha tenga la hora correcta en la zona horaria local
+        if (isset($data['fecha']) && !str_contains($data['fecha'], ' ')) {
+            // Si solo se envía la fecha (YYYY-MM-DD), agregar la hora actual
+            $data['fecha'] = $data['fecha'] . ' ' . date('H:i:s');
         }
 
         $gasto->update([
