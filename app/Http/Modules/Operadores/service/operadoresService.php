@@ -2,7 +2,7 @@
 
 namespace App\Http\Modules\Operadores\service;
 
-use App\Http\Modules\Operadores\models\Operadores;
+use App\Http\Modules\Operadores\Models\Operadores;
 use Illuminate\Http\Request;
 
 class operadoresService
