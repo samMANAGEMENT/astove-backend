@@ -13,10 +13,10 @@ class GastosService
         $user = Auth::user();
         $entidadId = $user->obtenerEntidadId();
 
-        // Asegurar que la fecha tenga la hora correcta en la zona horaria local
-        if (isset($data['fecha']) && !str_contains($data['fecha'], ' ')) {
-            // Si solo se envía la fecha (YYYY-MM-DD), agregar la hora actual
-            $data['fecha'] = $data['fecha'] . ' ' . date('H:i:s');
+        // Asegurar que la fecha se procese correctamente en la zona horaria local
+        if (isset($data['fecha'])) {
+            // Parse the date string as a date in the application's timezone, at midnight
+            $data['fecha'] = Carbon::createFromFormat('Y-m-d', $data['fecha'], config('app.timezone'))->startOfDay();
         }
 
         return GastosOperativos::create([
@@ -67,10 +67,10 @@ class GastosService
             throw new \Exception('Gasto no encontrado');
         }
 
-        // Asegurar que la fecha tenga la hora correcta en la zona horaria local
-        if (isset($data['fecha']) && !str_contains($data['fecha'], ' ')) {
-            // Si solo se envía la fecha (YYYY-MM-DD), agregar la hora actual
-            $data['fecha'] = $data['fecha'] . ' ' . date('H:i:s');
+        // Asegurar que la fecha se procese correctamente en la zona horaria local
+        if (isset($data['fecha'])) {
+            // Parse the date string as a date in the application's timezone, at midnight
+            $data['fecha'] = Carbon::createFromFormat('Y-m-d', $data['fecha'], config('app.timezone'))->startOfDay();
         }
 
         $gasto->update([

@@ -7,6 +7,7 @@ use App\Http\Modules\servicios\models\ServiciosRealizados;
 use App\Http\Modules\servicios\models\IngresosAdicionales;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class ServiciosService 
 {
@@ -56,10 +57,10 @@ class ServiciosService
         $data['monto_descuento'] = $montoDescuento;
         $data['total_con_descuento'] = $totalConDescuento;
         
-        // Asegurar que la fecha tenga la hora correcta en la zona horaria local
-        if (isset($data['fecha']) && !str_contains($data['fecha'], ' ')) {
-            // Si solo se envía la fecha (YYYY-MM-DD), agregar la hora actual
-            $data['fecha'] = $data['fecha'] . ' ' . date('H:i:s');
+        // Asegurar que la fecha se procese correctamente en la zona horaria local
+        if (isset($data['fecha'])) {
+            // Parse the date string as a date in the application's timezone, at midnight
+            $data['fecha'] = Carbon::createFromFormat('Y-m-d', $data['fecha'], config('app.timezone'))->startOfDay();
         }
         
         return ServiciosRealizados::create($data);
@@ -464,10 +465,10 @@ class ServiciosService
             throw new \Exception('La suma de efectivo y transferencia debe ser igual al monto total');
         }
 
-        // Asegurar que la fecha tenga la hora correcta en la zona horaria local
-        if (isset($data['fecha']) && !str_contains($data['fecha'], ' ')) {
-            // Si solo se envía la fecha (YYYY-MM-DD), agregar la hora actual
-            $data['fecha'] = $data['fecha'] . ' ' . date('H:i:s');
+        // Asegurar que la fecha se procese correctamente en la zona horaria local
+        if (isset($data['fecha'])) {
+            // Parse the date string as a date in the application's timezone, at midnight
+            $data['fecha'] = Carbon::createFromFormat('Y-m-d', $data['fecha'], config('app.timezone'))->startOfDay();
         }
 
         // Si es un servicio ocasional y se proporciona operador_id, crear también el servicio realizado
