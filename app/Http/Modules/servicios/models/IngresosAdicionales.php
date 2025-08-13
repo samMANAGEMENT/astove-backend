@@ -28,7 +28,7 @@ class IngresosAdicionales extends Model
     ];
 
     protected $casts = [
-        'fecha' => 'date',
+        'fecha' => 'date:Y-m-d',
         'monto' => 'decimal:2',
         'monto_efectivo' => 'decimal:2',
         'monto_transferencia' => 'decimal:2'
