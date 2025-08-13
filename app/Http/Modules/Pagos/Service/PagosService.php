@@ -52,7 +52,7 @@ class PagosService
     {
         // Obtener todos los empleados con servicios no pagados
         $empleados = Operadores::with(['serviciosRealizados' => function($query) {
-            $query->where('pagado', false)
+            $query->whereRaw('pagado = ?', [false])
                   ->with('servicio:id,nombre,porcentaje_pago_empleado,precio');
         }])->get();
 
@@ -246,7 +246,7 @@ class PagosService
             if ($tipoPago === 'total') {
                 // Marcar todos los servicios no pagados del empleado como pagados
                 ServiciosRealizados::where('empleado_id', $empleadoId)
-                    ->where('pagado', false)
+                    ->whereRaw('pagado = ?', [false])
                     ->update([
                         'pagado' => true,
                         'pago_id' => $pago->id
@@ -275,7 +275,7 @@ class PagosService
     {
         // Obtener servicios no pagados del empleado
         return ServiciosRealizados::where('empleado_id', $empleadoId)
-            ->where('pagado', false)
+            ->whereRaw('pagado = ?', [false])
             ->with('servicio:id,nombre,porcentaje_pago_empleado,precio')
             ->get()
             ->map(function($servicio) {
