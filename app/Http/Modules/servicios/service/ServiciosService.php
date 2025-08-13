@@ -57,11 +57,7 @@ class ServiciosService
         $data['monto_descuento'] = $montoDescuento;
         $data['total_con_descuento'] = $totalConDescuento;
         
-        // Asegurar que la fecha se procese correctamente en la zona horaria local
-        if (isset($data['fecha'])) {
-            // Parse the date string as a date in the application's timezone, at midnight
-            $data['fecha'] = Carbon::createFromFormat('Y-m-d', $data['fecha'], config('app.timezone'))->startOfDay();
-        }
+        // La fecha ya viene en formato Y-m-d, no necesita procesamiento adicional
         
         return ServiciosRealizados::create($data);
     }
@@ -465,11 +461,7 @@ class ServiciosService
             throw new \Exception('La suma de efectivo y transferencia debe ser igual al monto total');
         }
 
-        // Asegurar que la fecha se procese correctamente en la zona horaria local
-        if (isset($data['fecha'])) {
-            // Parse the date string as a date in the application's timezone, at midnight
-            $data['fecha'] = Carbon::createFromFormat('Y-m-d', $data['fecha'], config('app.timezone'))->startOfDay();
-        }
+        // La fecha ya viene en formato Y-m-d, no necesita procesamiento adicional
 
         // Si es un servicio ocasional y se proporciona operador_id, crear también el servicio realizado
         if (($data['tipo'] ?? '') === 'servicio_ocasional' && !empty($data['operador_id'])) {

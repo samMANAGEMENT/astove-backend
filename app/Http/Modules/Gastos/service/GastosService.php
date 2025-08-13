@@ -13,11 +13,7 @@ class GastosService
         $user = Auth::user();
         $entidadId = $user->obtenerEntidadId();
 
-        // Asegurar que la fecha se procese correctamente en la zona horaria local
-        if (isset($data['fecha'])) {
-            // Parse the date string as a date in the application's timezone, at midnight
-            $data['fecha'] = Carbon::createFromFormat('Y-m-d', $data['fecha'], config('app.timezone'))->startOfDay();
-        }
+        // La fecha ya viene en formato Y-m-d, no necesita procesamiento adicional
 
         return GastosOperativos::create([
             'entidad_id' => $entidadId,
@@ -67,11 +63,7 @@ class GastosService
             throw new \Exception('Gasto no encontrado');
         }
 
-        // Asegurar que la fecha se procese correctamente en la zona horaria local
-        if (isset($data['fecha'])) {
-            // Parse the date string as a date in the application's timezone, at midnight
-            $data['fecha'] = Carbon::createFromFormat('Y-m-d', $data['fecha'], config('app.timezone'))->startOfDay();
-        }
+        // La fecha ya viene en formato Y-m-d, no necesita procesamiento adicional
 
         $gasto->update([
             'descripcion' => $data['descripcion'],

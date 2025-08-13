@@ -18,7 +18,7 @@ class GastosOperativos extends Model
 
     protected $casts = [
         'monto' => 'decimal:2',
-        'fecha' => 'datetime:Y-m-d H:i:s'
+        'fecha' => 'date:Y-m-d'
     ];
 
     public function entidad(): BelongsTo
