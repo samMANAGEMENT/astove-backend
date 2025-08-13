@@ -37,7 +37,7 @@ class ServiciosRealizados extends Model
         'descuento_porcentaje' => 'decimal:2',
         'monto_descuento' => 'decimal:2',
         'total_con_descuento' => 'decimal:2',
-        'fecha' => 'datetime:Y-m-d H:i:s'
+        'fecha' => 'date:Y-m-d'
     ];
 
 // Relación con el modelo Empleado
