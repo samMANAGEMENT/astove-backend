@@ -5,6 +5,7 @@ namespace App\Http\Modules\servicios\controller;
 use App\Http\Controllers\Controller;
 use App\Http\Modules\servicios\request\crearServicioRequest;
 use App\Http\Modules\servicios\request\crearServicioRealizadoRequest;
+use App\Http\Modules\servicios\request\crearServiciosMultiplesRequest;
 use App\Http\Modules\servicios\request\crearIngresoAdicionalRequest;
 use Illuminate\Http\Request;
 use App\Http\Modules\servicios\service\ServiciosService;
@@ -55,6 +56,16 @@ class ServiciosController extends Controller
         try {
             $servicio = $this->serviciosService->servicioRealizado($request->validated());
             return response()->json($servicio, 201);
+        } catch (\Throwable $th) {
+            return response()->json($th->getMessage(), 500);
+        }
+    }
+
+    public function serviciosMultiples(crearServiciosMultiplesRequest $request)
+    {
+        try {
+            $resultado = $this->serviciosService->serviciosMultiples($request->validated());
+            return response()->json($resultado, 201);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);
         }
