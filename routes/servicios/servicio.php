@@ -9,6 +9,7 @@ Route::prefix('servicios')->group(function () {
 		Route::post('crear-servicio', 'crearServicio');
 		Route::get('listar-servicio', 'listarServicio');
 		Route::post('servicio-realizado', 'servicioRealizado');
+		Route::post('servicios-multiples', 'serviciosMultiples');
 		Route::get('listar-servicios-realizados', 'listarServiciosRealizados');
 		Route::get('total-pagar-operador', 'calcularPagosEmpleados');
 		Route::get('total-pagar-operador-completo', 'calcularPagosEmpleadosCompleto');

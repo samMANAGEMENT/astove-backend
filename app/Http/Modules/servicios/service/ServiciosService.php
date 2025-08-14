@@ -941,4 +941,77 @@ class ServiciosService
             'id' => $id
         ];
     }
+
+    public function serviciosMultiples(array $data)
+    {
+        // Validar que los montos sumen el total de todos los servicios
+        $montoEfectivo = $data['monto_efectivo'] ?? 0;
+        $montoTransferencia = $data['monto_transferencia'] ?? 0;
+        $servicios = $data['servicios'] ?? [];
+        
+        // Calcular el total de todos los servicios
+        $totalServicios = 0;
+        $serviciosConCalculos = [];
+        
+        foreach ($servicios as $servicio) {
+            $servicioModel = Servicios::find($servicio['servicio_id']);
+            if (!$servicioModel) {
+                throw new \Exception("El servicio con ID {$servicio['servicio_id']} no existe");
+            }
+            
+            $precio = $servicioModel->precio ?? 0;
+            $cantidad = $servicio['cantidad'] ?? 0;
+            $descuentoPorcentaje = $servicio['descuento_porcentaje'] ?? 0;
+            
+            $totalServicio = $precio * $cantidad;
+            $montoDescuento = $totalServicio * ($descuentoPorcentaje / 100);
+            $totalConDescuento = $totalServicio - $montoDescuento;
+            
+            $serviciosConCalculos[] = [
+                'servicio_id' => $servicio['servicio_id'],
+                'cantidad' => $cantidad,
+                'descuento_porcentaje' => $descuentoPorcentaje,
+                'total_servicio' => $totalServicio,
+                'monto_descuento' => $montoDescuento,
+                'total_con_descuento' => $totalConDescuento
+            ];
+            
+            $totalServicios += $totalConDescuento;
+        }
+        
+        // Validar que la suma de efectivo y transferencia sea igual al total de todos los servicios
+        $sumaMontos = $montoEfectivo + $montoTransferencia;
+        if (abs($sumaMontos - $totalServicios) > 0.01) {
+            throw new \Exception('La suma de efectivo y transferencia debe ser igual al total de todos los servicios con descuentos aplicados');
+        }
+        
+        // Usar transacción para asegurar que todos los servicios se creen o ninguno
+        return DB::transaction(function () use ($data, $serviciosConCalculos) {
+            $serviciosCreados = [];
+            
+            foreach ($serviciosConCalculos as $servicioCalculado) {
+                $servicioData = [
+                    'empleado_id' => $data['empleado_id'],
+                    'servicio_id' => $servicioCalculado['servicio_id'],
+                    'cantidad' => $servicioCalculado['cantidad'],
+                    'fecha' => $data['fecha'],
+                    'metodo_pago' => $data['metodo_pago'],
+                    'monto_efectivo' => $data['monto_efectivo'],
+                    'monto_transferencia' => $data['monto_transferencia'],
+                    'total_servicio' => $servicioCalculado['total_servicio'],
+                    'descuento_porcentaje' => $servicioCalculado['descuento_porcentaje'],
+                    'monto_descuento' => $servicioCalculado['monto_descuento'],
+                    'total_con_descuento' => $servicioCalculado['total_con_descuento']
+                ];
+                
+                $serviciosCreados[] = ServiciosRealizados::create($servicioData);
+            }
+            
+            return [
+                'message' => 'Servicios creados exitosamente',
+                'servicios_creados' => count($serviciosCreados),
+                'total_general' => $data['monto_efectivo'] + $data['monto_transferencia']
+            ];
+        });
+    }
 }
