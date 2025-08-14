@@ -697,10 +697,8 @@ class ServiciosService
             ->whereDate('fecha', $fecha)
             ->get();
 
-        // Trae los ingresos adicionales de la fecha específica (excluyendo servicios ocasionales)
-        $ingresosAdicionales = IngresosAdicionales::whereDate('fecha', $fecha)
-            ->where('tipo', '!=', 'servicio_ocasional')
-            ->get();
+        // Trae TODOS los ingresos adicionales de la fecha específica
+        $ingresosAdicionales = IngresosAdicionales::whereDate('fecha', $fecha)->get();
 
         // Trae las ventas de productos de la fecha específica
         $ventas = \App\Http\Modules\Ventas\Models\Ventas::whereDate('created_at', $fecha)
@@ -711,8 +709,22 @@ class ServiciosService
             return $carry + ($item->total_con_descuento ?? ($item->cantidad * ($item->servicio->precio ?? 0)));
         }, 0);
 
-        // Calcular ingresos adicionales
-        $ingresosAdicionalesTotal = $ingresosAdicionales->sum('monto');
+        // Filtrar ingresos adicionales para evitar doble conteo con servicios ocasionales
+        // Si un servicio ocasional ya está en servicios_realizados, no lo contamos en ingresos_adicionales
+        $ingresosAdicionalesFiltrados = $ingresosAdicionales->filter(function ($ingreso) use ($servicios) {
+            // Si es un servicio ocasional, verificar si ya está en servicios_realizados
+            if ($ingreso->tipo === 'servicio_ocasional' && $ingreso->servicio_realizado_id) {
+                // Si tiene servicio_realizado_id, ya está contado en servicios_realizados
+                return false;
+            }
+            return true;
+        });
+
+        // Calcular ingresos adicionales (excluyendo servicios ocasionales ya contados en servicios)
+        $ingresosAdicionalesTotal = $ingresosAdicionalesFiltrados->sum('monto');
+
+        // Para el desglose de cantidad, contar TODOS los servicios ocasionales (incluyendo los que ya están en servicios_realizados)
+        $serviciosOcasionalesCount = $ingresosAdicionales->where('tipo', 'servicio_ocasional')->count();
 
         // Calcular ingresos de ventas de productos
         $ingresosVentas = $ventas->sum('total');
@@ -739,8 +751,8 @@ class ServiciosService
         // Métodos de pago
         $efectivoServicios = $servicios->sum('monto_efectivo');
         $transferenciaServicios = $servicios->sum('monto_transferencia');
-        $efectivoAdicionales = $ingresosAdicionales->sum('monto_efectivo');
-        $transferenciaAdicionales = $ingresosAdicionales->sum('monto_transferencia');
+        $efectivoAdicionales = $ingresosAdicionalesFiltrados->sum('monto_efectivo');
+        $transferenciaAdicionales = $ingresosAdicionalesFiltrados->sum('monto_transferencia');
         $efectivoVentas = $ventas->sum('monto_efectivo');
         $transferenciaVentas = $ventas->sum('monto_transferencia');
 
@@ -749,13 +761,20 @@ class ServiciosService
         $totalTransferencia = $transferenciaServicios + $transferenciaAdicionales + $transferenciaVentas;
 
         // Desglose por tipo de ingreso adicional
-        $accesorios = $ingresosAdicionales->where('tipo', 'accesorio')->sum('monto');
-        $serviciosOcasionales = $ingresosAdicionales->where('tipo', 'servicio_ocasional')->sum('monto');
-        $otros = $ingresosAdicionales->where('tipo', 'otro')->sum('monto');
+        $accesorios = $ingresosAdicionalesFiltrados->where('tipo', 'accesorio')->sum('monto');
+        $serviciosOcasionales = $serviciosOcasionalesCount; // Usar la cantidad total de servicios ocasionales
+        $otros = $ingresosAdicionalesFiltrados->where('tipo', 'otro')->sum('monto');
 
         // Detalles de servicios por empleado
         $serviciosPorEmpleado = $servicios->groupBy('empleado_id')->map(function ($items, $empleadoId) {
             $empleado = $items->first()->empleado;
+            
+            // Calcular total bruto (precio original sin descuento)
+            $totalBruto = $items->reduce(function ($carry, $item) {
+                return $carry + ($item->cantidad * ($item->servicio->precio ?? 0));
+            }, 0);
+            
+            // Calcular total a pagar al empleado
             $totalEmpleado = $items->reduce(function ($carry, $item) {
                 $precio = $item->servicio->precio ?? 0;
                 $porcentaje = $item->servicio->porcentaje_pago_empleado ?? 50;
@@ -767,6 +786,7 @@ class ServiciosService
                 'nombre' => $empleado->nombre ?? 'N/A',
                 'apellido' => $empleado->apellido ?? 'N/A',
                 'cantidad_servicios' => $items->count(),
+                'total_bruto' => $totalBruto,
                 'total_pagar' => $totalEmpleado,
                 'servicios' => $items->map(function ($item) {
                     return [
@@ -774,6 +794,7 @@ class ServiciosService
                         'cantidad' => $item->cantidad,
                         'precio_unitario' => $item->servicio->precio ?? 0,
                         'porcentaje_empleado' => $item->servicio->porcentaje_pago_empleado ?? 50,
+                        'total_bruto_servicio' => $item->cantidad * ($item->servicio->precio ?? 0),
                         'total_servicio' => $item->total_con_descuento ?? ($item->cantidad * ($item->servicio->precio ?? 0)),
                         'metodo_pago' => $item->metodo_pago
                     ];
@@ -810,7 +831,7 @@ class ServiciosService
                 'accesorios' => $accesorios,
                 'servicios_ocasionales' => $serviciosOcasionales,
                 'otros' => $otros,
-                'total_registros' => $ingresosAdicionales->count()
+                'total_registros' => $ingresosAdicionalesFiltrados->count()
             ],
             'ventas_productos' => [
                 'total_ventas' => $ingresosVentas,
