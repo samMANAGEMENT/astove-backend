@@ -57,7 +57,15 @@ class ServiciosService
         $data['monto_descuento'] = $montoDescuento;
         $data['total_con_descuento'] = $totalConDescuento;
         
-        // La fecha ya viene en formato Y-m-d, no necesita procesamiento adicional
+        // Si la fecha viene solo como Y-m-d, agregar la hora actual
+        if (isset($data['fecha']) && !str_contains($data['fecha'], ':')) {
+            // Usar Carbon con zona horaria explícita para asegurar la hora correcta
+            $horaActual = \Carbon\Carbon::now('America/Bogota')->format('H:i:s');
+            $data['fecha'] = $data['fecha'] . ' ' . $horaActual;
+            
+            // Log para debug
+            \Log::info('Servicio realizado - Fecha original: ' . $data['fecha'] . ' - Hora actual: ' . $horaActual);
+        }
         
         return ServiciosRealizados::create($data);
     }
@@ -1024,6 +1032,16 @@ class ServiciosService
                     'monto_descuento' => $servicioCalculado['monto_descuento'],
                     'total_con_descuento' => $servicioCalculado['total_con_descuento']
                 ];
+                
+                // Si la fecha viene solo como Y-m-d, agregar la hora actual
+                if (isset($servicioData['fecha']) && !str_contains($servicioData['fecha'], ':')) {
+                    // Usar Carbon con zona horaria explícita para asegurar la hora correcta
+                    $horaActual = \Carbon\Carbon::now('America/Bogota')->format('H:i:s');
+                    $servicioData['fecha'] = $servicioData['fecha'] . ' ' . $horaActual;
+                    
+                    // Log para debug
+                    \Log::info('Servicios múltiples - Fecha original: ' . $servicioData['fecha'] . ' - Hora actual: ' . $horaActual);
+                }
                 
                 $serviciosCreados[] = ServiciosRealizados::create($servicioData);
             }
