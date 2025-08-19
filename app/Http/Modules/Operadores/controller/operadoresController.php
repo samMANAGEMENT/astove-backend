@@ -15,8 +15,8 @@ class operadoresController extends Controller
     public function crearOperador(Request $request)
     {
         try {
-            $operadores = $this->operadoresService->listarOperadores($request->all());
-            return response()->json($operadores, 200);
+            $operador = $this->operadoresService->crearOperador($request->all());
+            return response()->json($operador, 201);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
         }
