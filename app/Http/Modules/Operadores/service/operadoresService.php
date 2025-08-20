@@ -51,4 +51,35 @@ class operadoresService
         
         return $query->get();
     }
+
+    public function modificarOperador($id, $data)
+    {
+        try {
+            DB::beginTransaction();
+
+            $operador = Operadores::findOrFail($id);
+            
+            // Verificar que el usuario tenga permisos para modificar este operador
+            $userEntidadId = auth()->user()->obtenerEntidadId();
+            if ($userEntidadId && $operador->entidad_id !== $userEntidadId) {
+                throw new \Exception('No tienes permisos para modificar este operador');
+            }
+
+            $operador->update([
+                'nombre' => $data['nombre'],
+                'apellido' => $data['apellido'],
+                'entidad_id' => $data['entidad_id'],
+                'telefono' => $data['telefono'],
+                'cargo_id' => $data['cargo_id']
+            ]);
+
+            DB::commit();
+
+            return $operador->load(['entidades', 'cargo', 'usuario']);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw new \Exception("Error al modificar el operador: " . $e->getMessage(), 500, $e);
+        }
+    }
 }

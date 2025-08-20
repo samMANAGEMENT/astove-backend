@@ -32,4 +32,14 @@ class operadoresController extends Controller
             return response()->json(['error' => $th->getMessage()], 500);
         }
     }
+
+    public function modificarOperador(Request $request, $id)
+    {
+        try {
+            $operador = $this->operadoresService->modificarOperador($id, $request->all());
+            return response()->json($operador, 200);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
 }
