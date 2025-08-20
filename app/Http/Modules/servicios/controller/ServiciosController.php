@@ -20,7 +20,16 @@ class ServiciosController extends Controller
     public function crearServicio(crearServicioRequest $crearServicioRequest)
     {
         try {
-            $servicio = $this->serviciosService->crearServicio($crearServicioRequest->validated());
+            $data = $crearServicioRequest->validated();
+            
+            // Si el usuario es admin y proporcionó entidad_id, usarla; si no, usar la del usuario
+            if (auth()->user()->esAdmin() && isset($data['entidad_id'])) {
+                $data['entidad_id'] = $data['entidad_id'];
+            } else {
+                $data['entidad_id'] = auth()->user()->obtenerEntidadId();
+            }
+            
+            $servicio = $this->serviciosService->crearServicio($data);
             return response()->json($servicio, 201);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);
@@ -30,7 +39,10 @@ class ServiciosController extends Controller
     public function listarServicio()
     {
         try {
-            $servicio = $this->serviciosService->listarServicio();
+            $user = auth()->user();
+            $entidadId = $user->obtenerEntidadId();
+            $isAdmin = $user->esAdmin();
+            $servicio = $this->serviciosService->listarServicio($entidadId, $isAdmin);
             return response()->json($servicio, 200);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);
@@ -40,11 +52,12 @@ class ServiciosController extends Controller
     public function modificarServicio(Request $data, $id)
     {
         try {
+            $entidadId = auth()->user()->obtenerEntidadId();
             $servicio = $this->serviciosService->modificarServicio($data->only([
                 'nombre',
                 'precio',
                 'porcentaje_pago_empleado'
-            ]), $id);
+            ]), $id, $entidadId);
             return response()->json($servicio, 200);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);
@@ -78,8 +91,9 @@ class ServiciosController extends Controller
             $perPage = $request->get('per_page', 10);
             $search = $request->get('search', '');
             $empleadoId = $request->get('empleado_id');
+            $entidadId = auth()->user()->obtenerEntidadId();
             
-            $servicio = $this->serviciosService->listarServiciosRealizados($page, $perPage, $search, $empleadoId);
+            $servicio = $this->serviciosService->listarServiciosRealizados($page, $perPage, $search, $empleadoId, $entidadId);
             return response()->json($servicio, 200);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);
@@ -89,7 +103,8 @@ class ServiciosController extends Controller
     public function calcularPagosEmpleados()
     {
         try {
-            $pagos = $this->serviciosService->calcularPagosEmpleados();
+            $entidadId = auth()->user()->obtenerEntidadId();
+            $pagos = $this->serviciosService->calcularPagosEmpleados($entidadId);
             return response()->json($pagos, 200);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);
@@ -99,7 +114,8 @@ class ServiciosController extends Controller
     public function totalGanadoServicios()
     {
         try {
-            $total = $this->serviciosService->totalGanadoServicios();
+            $entidadId = auth()->user()->obtenerEntidadId();
+            $total = $this->serviciosService->totalGanadoServicios($entidadId);
             return response()->json(['total_ganado' => $total], 200);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);
@@ -109,7 +125,8 @@ class ServiciosController extends Controller
     public function calcularPagosEmpleadosCompleto()
     {
         try {
-            $pagos = $this->serviciosService->calcularPagosEmpleadosCompleto();
+            $entidadId = auth()->user()->obtenerEntidadId();
+            $pagos = $this->serviciosService->calcularPagosEmpleadosCompleto($entidadId);
             return response()->json($pagos, 200);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);
@@ -119,7 +136,8 @@ class ServiciosController extends Controller
     public function calcularGananciaNeta()
     {
         try {
-            $ganancia = $this->serviciosService->calcularGananciaNeta();
+            $entidadId = auth()->user()->obtenerEntidadId();
+            $ganancia = $this->serviciosService->calcularGananciaNeta($entidadId);
             return response()->json($ganancia, 200);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);
@@ -129,7 +147,8 @@ class ServiciosController extends Controller
     public function gananciasPorMetodoPago()
     {
         try {
-            $ganancias = $this->serviciosService->gananciasPorMetodoPago();
+            $entidadId = auth()->user()->obtenerEntidadId();
+            $ganancias = $this->serviciosService->gananciasPorMetodoPago($entidadId);
             return response()->json($ganancias, 200);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);
@@ -139,7 +158,8 @@ class ServiciosController extends Controller
     public function totalGananciasSeparadas()
     {
         try {
-            $totales = $this->serviciosService->totalGananciasSeparadas();
+            $entidadId = auth()->user()->obtenerEntidadId();
+            $totales = $this->serviciosService->totalGananciasSeparadas($entidadId);
             return response()->json($totales, 200);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);
@@ -160,7 +180,8 @@ class ServiciosController extends Controller
     public function listarIngresosAdicionales()
     {
         try {
-            $ingresos = $this->serviciosService->listarIngresosAdicionales();
+            $entidadId = auth()->user()->obtenerEntidadId();
+            $ingresos = $this->serviciosService->listarIngresosAdicionales($entidadId);
             return response()->json($ingresos, 200);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);
@@ -180,7 +201,8 @@ class ServiciosController extends Controller
     public function estadisticasCompletas()
     {
         try {
-            $estadisticas = $this->serviciosService->estadisticasCompletas();
+            $entidadId = auth()->user()->obtenerEntidadId();
+            $estadisticas = $this->serviciosService->estadisticasCompletas($entidadId);
             return response()->json($estadisticas, 200);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);
@@ -211,7 +233,8 @@ class ServiciosController extends Controller
     {
         try {
             $fecha = $request->get('fecha', date('Y-m-d'));
-            $ganancias = $this->serviciosService->gananciasDiarias($fecha);
+            $entidadId = auth()->user()->obtenerEntidadId();
+            $ganancias = $this->serviciosService->gananciasDiarias($fecha, $entidadId);
             return response()->json($ganancias, 200);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);
@@ -223,7 +246,8 @@ class ServiciosController extends Controller
         try {
             $fechaInicio = $request->get('fecha_inicio', date('Y-m-01'));
             $fechaFin = $request->get('fecha_fin', date('Y-m-d'));
-            $ganancias = $this->serviciosService->gananciasPorRango($fechaInicio, $fechaFin);
+            $entidadId = auth()->user()->obtenerEntidadId();
+            $ganancias = $this->serviciosService->gananciasPorRango($fechaInicio, $fechaFin, $entidadId);
             return response()->json($ganancias, 200);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);

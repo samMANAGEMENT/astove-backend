@@ -16,16 +16,28 @@ class ServiciosService
         return Servicios::create($data);
     }
 
-    public function listarServicio()
+    public function listarServicio($entidadId = null, $isAdmin = false)
     {
-        return Servicios::where('nombre', 'not like', 'Servicio Ocasional%')
-            ->orderBy('id', 'asc')
-            ->get();
+        $query = Servicios::where('nombre', 'not like', 'Servicio Ocasional%')
+            ->orderBy('id', 'asc');
+        
+        // Si no es admin, filtrar por entidad
+        if (!$isAdmin && $entidadId) {
+            $query->where('entidad_id', $entidadId);
+        }
+        
+        return $query->get();
     }
 
-    public function modificarServicio(array $data, int $id)
+    public function modificarServicio(array $data, int $id, $entidadId = null)
     {
-        return Servicios::where('id', $id)->update($data);
+        $query = Servicios::where('id', $id);
+        
+        if ($entidadId) {
+            $query->where('entidad_id', $entidadId);
+        }
+        
+        return $query->update($data);
     }
 
     public function servicioRealizado(array $data)
@@ -70,10 +82,17 @@ class ServiciosService
         return ServiciosRealizados::create($data);
     }
 
-    public function listarServiciosRealizados($page = 1, $perPage = 10, $search = '', $empleadoId = null)
+    public function listarServiciosRealizados($page = 1, $perPage = 10, $search = '', $empleadoId = null, $entidadId = null)
     {
         $query = ServiciosRealizados::with(['empleado:id,nombre,apellido', 'servicio:id,nombre,precio'])
             ->orderBy('created_at', 'desc');
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->whereHas('servicio', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
 
         // Aplicar filtro de búsqueda si se proporciona
         if (!empty($search)) {
@@ -137,17 +156,25 @@ class ServiciosService
         ];
     }
 
-    public function calcularPagosEmpleados()
+    public function calcularPagosEmpleados($entidadId = null)
     {
         // Obtiene el mes y año actual
         $mesActual = date('m');
         $anioActual = date('Y');
 
         // Trae solo los servicios realizados del mes y año actual con la relación del servicio (para el precio y porcentaje)
-        $servicios = ServiciosRealizados::with('servicio', 'empleado')
+        $query = ServiciosRealizados::with('servicio', 'empleado')
             ->whereYear('fecha', $anioActual)
-            ->whereMonth('fecha', $mesActual)
-            ->get();
+            ->whereMonth('fecha', $mesActual);
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->whereHas('servicio', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $servicios = $query->get();
 
         // Agrupa y suma por empleado
         $pagos = $servicios->groupBy('empleado_id')->map(function ($items, $empleado_id) {
@@ -170,17 +197,25 @@ class ServiciosService
         return $pagos;
     }
 
-    public function calcularPagosEmpleadosCompleto()
+    public function calcularPagosEmpleadosCompleto($entidadId = null)
     {
         // Obtiene el mes y año actual
         $mesActual = date('m');
         $anioActual = date('Y');
 
         // Trae solo los servicios realizados del mes y año actual con la relación del servicio
-        $servicios = ServiciosRealizados::with('servicio', 'empleado')
+        $query = ServiciosRealizados::with('servicio', 'empleado')
             ->whereYear('fecha', $anioActual)
-            ->whereMonth('fecha', $mesActual)
-            ->get();
+            ->whereMonth('fecha', $mesActual);
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->whereHas('servicio', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $servicios = $query->get();
 
         // Agrupa y suma por empleado con detalles completos
         $pagos = $servicios->groupBy('empleado_id')->map(function ($items, $empleado_id) {
@@ -234,17 +269,25 @@ class ServiciosService
         return $pagos;
     }
 
-    public function totalGanadoServicios()
+    public function totalGanadoServicios($entidadId = null)
     {
         // Obtiene el mes y año actual
         $mesActual = date('m');
         $anioActual = date('Y');
 
         // Trae solo los servicios realizados del mes y año actual
-        $servicios = ServiciosRealizados::with('servicio')
+        $query = ServiciosRealizados::with('servicio')
             ->whereYear('fecha', $anioActual)
-            ->whereMonth('fecha', $mesActual)
-            ->get();
+            ->whereMonth('fecha', $mesActual);
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->whereHas('servicio', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $servicios = $query->get();
 
         // Suma el total con descuento (lo que realmente se cobró)
         $totalServicios = $servicios->reduce(function ($carry, $item) {
@@ -274,17 +317,25 @@ class ServiciosService
         return $total;
     }
 
-    public function calcularGananciaNeta()
+    public function calcularGananciaNeta($entidadId = null)
     {
         // Obtiene el mes y año actual
         $mesActual = date('m');
         $anioActual = date('Y');
 
         // Trae solo los servicios realizados del mes y año actual
-        $servicios = ServiciosRealizados::with('servicio')
+        $query = ServiciosRealizados::with('servicio')
             ->whereYear('fecha', $anioActual)
-            ->whereMonth('fecha', $mesActual)
-            ->get();
+            ->whereMonth('fecha', $mesActual);
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->whereHas('servicio', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $servicios = $query->get();
 
         // Calcular ingresos totales de servicios (con descuento aplicado)
         $ingresosServicios = $servicios->reduce(function ($carry, $item) {
@@ -343,17 +394,25 @@ class ServiciosService
         ];
     }
 
-    public function gananciasPorMetodoPago()
+    public function gananciasPorMetodoPago($entidadId = null)
     {
         // Obtiene el mes y año actual
         $mesActual = date('m');
         $anioActual = date('Y');
 
         // Trae los servicios realizados del mes y año actual
-        $servicios = ServiciosRealizados::with('servicio')
+        $query = ServiciosRealizados::with('servicio')
             ->whereYear('fecha', $anioActual)
-            ->whereMonth('fecha', $mesActual)
-            ->get();
+            ->whereMonth('fecha', $mesActual);
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->whereHas('servicio', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $servicios = $query->get();
 
         // Trae los ingresos adicionales del mes y año actual (excluyendo servicios ocasionales)
         $ingresosAdicionales = IngresosAdicionales::whereYear('fecha', $anioActual)
@@ -417,17 +476,25 @@ class ServiciosService
         ];
     }
 
-    public function totalGananciasSeparadas()
+    public function totalGananciasSeparadas($entidadId = null)
     {
         // Obtiene el mes y año actual
         $mesActual = date('m');
         $anioActual = date('Y');
 
         // Trae los servicios realizados del mes y año actual
-        $servicios = ServiciosRealizados::with('servicio')
+        $query = ServiciosRealizados::with('servicio')
             ->whereYear('fecha', $anioActual)
-            ->whereMonth('fecha', $mesActual)
-            ->get();
+            ->whereMonth('fecha', $mesActual);
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->whereHas('servicio', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $servicios = $query->get();
 
         // Trae los ingresos adicionales del mes y año actual (excluyendo servicios ocasionales)
         $ingresosAdicionales = IngresosAdicionales::whereYear('fecha', $anioActual)
@@ -505,15 +572,23 @@ class ServiciosService
         return IngresosAdicionales::create($data);
     }
 
-    public function listarIngresosAdicionales()
+    public function listarIngresosAdicionales($entidadId = null)
     {
-        return IngresosAdicionales::with([
+        $query = IngresosAdicionales::with([
             'empleado:id,nombre,apellido',
             'operador:id,nombre,apellido',
             'servicioRealizado.servicio:id,nombre,precio'
         ])
-            ->orderBy('created_at', 'desc')
-            ->get()
+            ->orderBy('created_at', 'desc');
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->whereHas('operador', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        return $query->get()
             ->map(function ($item) {
                 return [
                     'id' => $item->id,
@@ -586,17 +661,25 @@ class ServiciosService
         ];
     }
 
-    public function estadisticasCompletas()
+    public function estadisticasCompletas($entidadId = null)
     {
         // Obtiene el mes y año actual
         $mesActual = date('m');
         $anioActual = date('Y');
 
         // Trae los servicios realizados del mes y año actual
-        $servicios = ServiciosRealizados::with('servicio')
+        $query = ServiciosRealizados::with('servicio')
             ->whereYear('fecha', $anioActual)
-            ->whereMonth('fecha', $mesActual)
-            ->get();
+            ->whereMonth('fecha', $mesActual);
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->whereHas('servicio', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $servicios = $query->get();
 
         // Trae los ingresos adicionales del mes y año actual (excluyendo servicios ocasionales)
         $ingresosAdicionales = IngresosAdicionales::whereYear('fecha', $anioActual)
@@ -698,19 +781,44 @@ class ServiciosService
         ];
     }
 
-    public function gananciasDiarias($fecha)
+    public function gananciasDiarias($fecha, $entidadId = null)
     {
         // Trae los servicios realizados de la fecha específica
-        $servicios = ServiciosRealizados::with('servicio', 'empleado')
-            ->whereDate('fecha', $fecha)
-            ->get();
+        $query = ServiciosRealizados::with('servicio', 'empleado')
+            ->whereDate('fecha', $fecha);
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->whereHas('servicio', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $servicios = $query->get();
 
-        // Trae TODOS los ingresos adicionales de la fecha específica
-        $ingresosAdicionales = IngresosAdicionales::whereDate('fecha', $fecha)->get();
+        // Trae los ingresos adicionales de la fecha específica
+        $queryIngresos = IngresosAdicionales::whereDate('fecha', $fecha);
+        
+        // Filtrar ingresos adicionales por entidad si se proporciona
+        if ($entidadId) {
+            $queryIngresos->whereHas('operador', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $ingresosAdicionales = $queryIngresos->get();
 
         // Trae las ventas de productos de la fecha específica
-        $ventas = \App\Http\Modules\Ventas\Models\Ventas::whereDate('created_at', $fecha)
-            ->get();
+        $queryVentas = \App\Http\Modules\Ventas\Models\Ventas::whereDate('created_at', $fecha);
+        
+        // Filtrar ventas por entidad si se proporciona
+        if ($entidadId) {
+            $queryVentas->whereHas('empleado', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $ventas = $queryVentas->get();
 
         // Calcular ingresos de servicios
         $ingresosServicios = $servicios->reduce(function ($carry, $item) {
@@ -859,17 +967,33 @@ class ServiciosService
         ];
     }
 
-    public function gananciasPorRango($fechaInicio, $fechaFin)
+    public function gananciasPorRango($fechaInicio, $fechaFin, $entidadId = null)
     {
         // Trae los servicios realizados en el rango de fechas
-        $servicios = ServiciosRealizados::with('servicio')
-            ->whereBetween('fecha', [$fechaInicio, $fechaFin])
-            ->get();
+        $queryServicios = ServiciosRealizados::with('servicio')
+            ->whereBetween('fecha', [$fechaInicio, $fechaFin]);
+        
+        // Filtrar servicios por entidad si se proporciona
+        if ($entidadId) {
+            $queryServicios->whereHas('servicio', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $servicios = $queryServicios->get();
 
         // Trae los ingresos adicionales en el rango de fechas (excluyendo servicios ocasionales)
-        $ingresosAdicionales = IngresosAdicionales::whereBetween('fecha', [$fechaInicio, $fechaFin])
-            ->where('tipo', '!=', 'servicio_ocasional')
-            ->get();
+        $queryIngresos = IngresosAdicionales::whereBetween('fecha', [$fechaInicio, $fechaFin])
+            ->where('tipo', '!=', 'servicio_ocasional');
+        
+        // Filtrar ingresos adicionales por entidad si se proporciona
+        if ($entidadId) {
+            $queryIngresos->whereHas('operador', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $ingresosAdicionales = $queryIngresos->get();
 
         // Agrupar por día
         $gananciasPorDia = collect();

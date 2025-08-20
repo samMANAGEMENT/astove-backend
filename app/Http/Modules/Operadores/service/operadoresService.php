@@ -40,8 +40,15 @@ class operadoresService
         }
     }
 
-    public function listarOperadores()
+    public function listarOperadores($entidadId = null)
     {
-        return Operadores::with(['entidades', 'cargo', 'usuario'])->get();
+        $query = Operadores::with(['entidades', 'cargo', 'usuario']);
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->where('entidad_id', $entidadId);
+        }
+        
+        return $query->get();
     }
 }

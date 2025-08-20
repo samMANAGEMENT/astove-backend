@@ -36,6 +36,7 @@ class DatabaseSeeder extends Seeder
 
         // Ejecutar los seeders
         $this->call([
+            EntidadesSeeder::class,
             ServiciosSeeder::class,
             ProductosSeeder::class,
             RolesAndPermissionsSeeder::class,
