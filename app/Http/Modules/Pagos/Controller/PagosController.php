@@ -34,7 +34,8 @@ class PagosController extends Controller
     public function getPagosEmpleadosCompleto()
     {
         try {
-            $entidadId = auth()->user()->obtenerEntidadId();
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
             $pagos = $this->pagosService->getPagosEmpleadosCompleto($entidadId);
             return response()->json($pagos, 200);
         } catch (\Throwable $th) {
@@ -45,7 +46,8 @@ class PagosController extends Controller
     public function getGananciaNeta()
     {
         try {
-            $entidadId = auth()->user()->obtenerEntidadId();
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
             $ganancia = $this->pagosService->getGananciaNeta($entidadId);
             return response()->json($ganancia, 200);
         } catch (\Throwable $th) {
@@ -101,7 +103,8 @@ class PagosController extends Controller
     public function getEstadoPagosEmpleados()
     {
         try {
-            $entidadId = auth()->user()->obtenerEntidadId();
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
             $estado = $this->pagosService->getEstadoPagosEmpleados($entidadId);
             return response()->json($estado, 200);
         } catch (\Throwable $th) {

@@ -103,7 +103,8 @@ class ServiciosController extends Controller
     public function calcularPagosEmpleados()
     {
         try {
-            $entidadId = auth()->user()->obtenerEntidadId();
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
             $pagos = $this->serviciosService->calcularPagosEmpleados($entidadId);
             return response()->json($pagos, 200);
         } catch (\Throwable $th) {
@@ -114,7 +115,8 @@ class ServiciosController extends Controller
     public function totalGanadoServicios()
     {
         try {
-            $entidadId = auth()->user()->obtenerEntidadId();
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
             $total = $this->serviciosService->totalGanadoServicios($entidadId);
             return response()->json(['total_ganado' => $total], 200);
         } catch (\Throwable $th) {
@@ -125,7 +127,8 @@ class ServiciosController extends Controller
     public function calcularPagosEmpleadosCompleto()
     {
         try {
-            $entidadId = auth()->user()->obtenerEntidadId();
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
             $pagos = $this->serviciosService->calcularPagosEmpleadosCompleto($entidadId);
             return response()->json($pagos, 200);
         } catch (\Throwable $th) {
@@ -136,7 +139,8 @@ class ServiciosController extends Controller
     public function calcularGananciaNeta()
     {
         try {
-            $entidadId = auth()->user()->obtenerEntidadId();
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
             $ganancia = $this->serviciosService->calcularGananciaNeta($entidadId);
             return response()->json($ganancia, 200);
         } catch (\Throwable $th) {
@@ -147,7 +151,8 @@ class ServiciosController extends Controller
     public function gananciasPorMetodoPago()
     {
         try {
-            $entidadId = auth()->user()->obtenerEntidadId();
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
             $ganancias = $this->serviciosService->gananciasPorMetodoPago($entidadId);
             return response()->json($ganancias, 200);
         } catch (\Throwable $th) {
@@ -158,7 +163,8 @@ class ServiciosController extends Controller
     public function totalGananciasSeparadas()
     {
         try {
-            $entidadId = auth()->user()->obtenerEntidadId();
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
             $totales = $this->serviciosService->totalGananciasSeparadas($entidadId);
             return response()->json($totales, 200);
         } catch (\Throwable $th) {
@@ -180,7 +186,8 @@ class ServiciosController extends Controller
     public function listarIngresosAdicionales()
     {
         try {
-            $entidadId = auth()->user()->obtenerEntidadId();
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
             $ingresos = $this->serviciosService->listarIngresosAdicionales($entidadId);
             return response()->json($ingresos, 200);
         } catch (\Throwable $th) {
@@ -201,7 +208,8 @@ class ServiciosController extends Controller
     public function estadisticasCompletas()
     {
         try {
-            $entidadId = auth()->user()->obtenerEntidadId();
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
             $estadisticas = $this->serviciosService->estadisticasCompletas($entidadId);
             return response()->json($estadisticas, 200);
         } catch (\Throwable $th) {
@@ -233,7 +241,8 @@ class ServiciosController extends Controller
     {
         try {
             $fecha = $request->get('fecha', date('Y-m-d'));
-            $entidadId = auth()->user()->obtenerEntidadId();
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
             $ganancias = $this->serviciosService->gananciasDiarias($fecha, $entidadId);
             return response()->json($ganancias, 200);
         } catch (\Throwable $th) {
@@ -246,7 +255,8 @@ class ServiciosController extends Controller
         try {
             $fechaInicio = $request->get('fecha_inicio', date('Y-m-01'));
             $fechaFin = $request->get('fecha_fin', date('Y-m-d'));
-            $entidadId = auth()->user()->obtenerEntidadId();
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
             $ganancias = $this->serviciosService->gananciasPorRango($fechaInicio, $fechaFin, $entidadId);
             return response()->json($ganancias, 200);
         } catch (\Throwable $th) {
