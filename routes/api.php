@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Modules\Auth\controller\AuthController;
+use App\Http\Controllers\RolePermissionsController;
+use App\Http\Controllers\UsersController;
+use App\Http\Controllers\RolesController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +27,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+
+    // Ruta para obtener permisos del usuario
+    Route::get('/roles/permissions', [RolePermissionsController::class, 'getUserPermissions']);
 
     require __DIR__ . '/entidad/entidad.php';
     require __DIR__ . '/operador/operador.php';

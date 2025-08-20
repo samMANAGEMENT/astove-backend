@@ -62,6 +62,28 @@ class RolesAndPermissionsSeeder extends Seeder
             ['nombre' => 'crear_roles', 'descripcion' => 'Crear roles', 'modulo' => 'roles'],
             ['nombre' => 'editar_roles', 'descripcion' => 'Editar roles', 'modulo' => 'roles'],
             ['nombre' => 'eliminar_roles', 'descripcion' => 'Eliminar roles', 'modulo' => 'roles'],
+            
+            // Gastos
+            ['nombre' => 'ver_gastos', 'descripcion' => 'Ver gastos', 'modulo' => 'gastos'],
+            ['nombre' => 'crear_gastos', 'descripcion' => 'Crear gastos', 'modulo' => 'gastos'],
+            ['nombre' => 'editar_gastos', 'descripcion' => 'Editar gastos', 'modulo' => 'gastos'],
+            ['nombre' => 'eliminar_gastos', 'descripcion' => 'Eliminar gastos', 'modulo' => 'gastos'],
+            
+            // Ingresos Adicionales
+            ['nombre' => 'ver_ingresos_adicionales', 'descripcion' => 'Ver ingresos adicionales', 'modulo' => 'ingresos_adicionales'],
+            ['nombre' => 'crear_ingresos_adicionales', 'descripcion' => 'Crear ingresos adicionales', 'modulo' => 'ingresos_adicionales'],
+            ['nombre' => 'editar_ingresos_adicionales', 'descripcion' => 'Editar ingresos adicionales', 'modulo' => 'ingresos_adicionales'],
+            ['nombre' => 'eliminar_ingresos_adicionales', 'descripcion' => 'Eliminar ingresos adicionales', 'modulo' => 'ingresos_adicionales'],
+            
+            // Reportes
+            ['nombre' => 'ver_reportes', 'descripcion' => 'Ver reportes', 'modulo' => 'reportes'],
+            ['nombre' => 'generar_reportes', 'descripcion' => 'Generar reportes', 'modulo' => 'reportes'],
+            
+            // Usuarios (para administración general)
+            ['nombre' => 'ver_usuarios', 'descripcion' => 'Ver usuarios', 'modulo' => 'usuarios'],
+            ['nombre' => 'crear_usuarios', 'descripcion' => 'Crear usuarios', 'modulo' => 'usuarios'],
+            ['nombre' => 'editar_usuarios', 'descripcion' => 'Editar usuarios', 'modulo' => 'usuarios'],
+            ['nombre' => 'eliminar_usuarios', 'descripcion' => 'Eliminar usuarios', 'modulo' => 'usuarios'],
         ];
 
         foreach ($permisos as $permiso) {
@@ -88,7 +110,10 @@ class RolesAndPermissionsSeeder extends Seeder
                     'ver_operadores', 'crear_operadores', 'editar_operadores',
                     'ver_productos', 'crear_productos', 'editar_productos',
                     'ver_ventas', 'crear_ventas', 'editar_ventas',
-                    'ver_entidades'
+                    'ver_entidades',
+                    'ver_gastos', 'crear_gastos', 'editar_gastos',
+                    'ver_ingresos_adicionales', 'crear_ingresos_adicionales', 'editar_ingresos_adicionales',
+                    'ver_reportes', 'generar_reportes'
                 ]
             ],
             [
@@ -98,7 +123,8 @@ class RolesAndPermissionsSeeder extends Seeder
                     'ver_dashboard_operador',
                     'ver_pagos',
                     'ver_servicios_empleado',
-                    'ver_servicios'
+                    'ver_servicios',
+                    'ver_ingresos_adicionales'
                 ]
             ]
         ];
