@@ -23,8 +23,8 @@ class PagosController extends Controller
     }
     public function listarPago(Request $request){
         try {
-            $userEntityId = $request->get('user_entity_id');
-            $crearPago = $this->pagosService->listarPago($userEntityId);
+            $entidadId = auth()->user()->obtenerEntidadId();
+            $crearPago = $this->pagosService->listarPago($entidadId);
             return response($crearPago, 200);
         } catch (\Throwable $th) {
             return response()->json(['error' => 'error'], 500);
@@ -34,7 +34,8 @@ class PagosController extends Controller
     public function getPagosEmpleadosCompleto()
     {
         try {
-            $pagos = $this->pagosService->getPagosEmpleadosCompleto();
+            $entidadId = auth()->user()->obtenerEntidadId();
+            $pagos = $this->pagosService->getPagosEmpleadosCompleto($entidadId);
             return response()->json($pagos, 200);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
@@ -44,7 +45,8 @@ class PagosController extends Controller
     public function getGananciaNeta()
     {
         try {
-            $ganancia = $this->pagosService->getGananciaNeta();
+            $entidadId = auth()->user()->obtenerEntidadId();
+            $ganancia = $this->pagosService->getGananciaNeta($entidadId);
             return response()->json($ganancia, 200);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
@@ -99,7 +101,8 @@ class PagosController extends Controller
     public function getEstadoPagosEmpleados()
     {
         try {
-            $estado = $this->pagosService->getEstadoPagosEmpleados();
+            $entidadId = auth()->user()->obtenerEntidadId();
+            $estado = $this->pagosService->getEstadoPagosEmpleados($entidadId);
             return response()->json($estado, 200);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);

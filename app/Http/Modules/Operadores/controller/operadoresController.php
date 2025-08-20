@@ -25,7 +25,8 @@ class operadoresController extends Controller
     public function listarOperadores()
     {
         try {
-            $operadores = $this->operadoresService->listarOperadores();
+            $entidadId = auth()->user()->obtenerEntidadId();
+            $operadores = $this->operadoresService->listarOperadores($entidadId);
             return response()->json($operadores, 200);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);

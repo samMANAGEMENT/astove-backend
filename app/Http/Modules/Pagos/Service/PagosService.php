@@ -48,13 +48,20 @@ class PagosService
             });
     }
 
-    public function getPagosEmpleadosCompleto()
+    public function getPagosEmpleadosCompleto($entidadId = null)
     {
         // Obtener todos los empleados con servicios no pagados
-        $empleados = Operadores::with(['serviciosRealizados' => function($query) {
+        $query = Operadores::with(['serviciosRealizados' => function($query) {
             $query->whereRaw('pagado IS FALSE')
                   ->with('servicio:id,nombre,porcentaje_pago_empleado,precio');
-        }])->get();
+        }]);
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->where('entidad_id', $entidadId);
+        }
+        
+        $empleados = $query->get();
 
         $resultado = [];
         
@@ -97,12 +104,19 @@ class PagosService
         return $resultado;
     }
 
-    public function getEstadoPagosEmpleados()
+    public function getEstadoPagosEmpleados($entidadId = null)
     {
         // Obtener todos los empleados que tienen servicios realizados
-        $empleados = \App\Http\Modules\Operadores\Models\Operadores::with(['serviciosRealizados' => function($query) {
+        $query = \App\Http\Modules\Operadores\Models\Operadores::with(['serviciosRealizados' => function($query) {
             $query->with('servicio:id,nombre,porcentaje_pago_empleado,precio');
-        }])->get();
+        }]);
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->where('entidad_id', $entidadId);
+        }
+        
+        $empleados = $query->get();
 
         $resultado = [];
 
@@ -163,16 +177,24 @@ class PagosService
         return $resultado;
     }
 
-    public function getGananciaNeta()
+    public function getGananciaNeta($entidadId = null)
     {
         // Usar la lógica original del servicio de servicios
         $mesActual = date('m');
         $anioActual = date('Y');
 
-        $servicios = ServiciosRealizados::with('servicio')
+        $query = ServiciosRealizados::with('servicio')
             ->whereYear('fecha', $anioActual)
-            ->whereMonth('fecha', $mesActual)
-            ->get();
+            ->whereMonth('fecha', $mesActual);
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->whereHas('servicio', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $servicios = $query->get();
 
         $ingresosTotales = $servicios->reduce(function ($carry, $item) {
             return $carry + ($item->cantidad * ($item->servicio->precio ?? 0));

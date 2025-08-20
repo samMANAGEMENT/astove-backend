@@ -25,11 +25,18 @@ class crearServicioRequest extends FormRequest
      */
     public function rules()
     {
-        return [
+        $rules = [
             'nombre' => 'required|string',
             'precio' => 'required|numeric',
             'porcentaje_pago_empleado' => 'nullable|numeric|min:0|max:100'
         ];
+
+        // Si el usuario es admin, permitir seleccionar entidad_id
+        if (auth()->user()->esAdmin()) {
+            $rules['entidad_id'] = 'nullable|exists:entidades,id';
+        }
+
+        return $rules;
     }
 
     protected function failedValidation(Validator $validator)

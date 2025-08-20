@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Http\Modules\servicios\models\Servicios;
+use App\Http\Modules\Entidades\models\Entidades;
 
 class ServiciosSeeder extends Seeder
 {
@@ -12,6 +13,14 @@ class ServiciosSeeder extends Seeder
      */
     public function run(): void
     {
+        // Obtener todas las entidades disponibles
+        $entidades = Entidades::all();
+        
+        if ($entidades->isEmpty()) {
+            $this->command->warn('No hay entidades disponibles. Ejecute EntidadesSeeder primero.');
+            return;
+        }
+        
         $servicios = [
             [
                 'nombre' => 'Depilacion con Cera',
@@ -201,13 +210,21 @@ class ServiciosSeeder extends Seeder
             ],
         ];
 
+        // Asignar servicios a entidades de forma rotativa
+        $entidadIndex = 0;
         foreach ($servicios as $servicio) {
+            $entidadId = $entidades[$entidadIndex]->id;
+            $servicio['entidad_id'] = $entidadId;
+            
             Servicios::firstOrCreate(
-                ['nombre' => $servicio['nombre']],
+                ['nombre' => $servicio['nombre'], 'entidad_id' => $entidadId],
                 $servicio
             );
+            
+            // Rotar entre entidades
+            $entidadIndex = ($entidadIndex + 1) % $entidades->count();
         }
 
-        $this->command->info('Servicios sembrados exitosamente.');
+        $this->command->info('Servicios sembrados exitosamente en ' . $entidades->count() . ' entidades.');
     }
 } 

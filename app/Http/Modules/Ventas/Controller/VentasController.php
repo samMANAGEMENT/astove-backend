@@ -38,8 +38,9 @@ class VentasController extends Controller
             $page = $request->get('page', 1);
             $perPage = $request->get('per_page', 10);
             $search = $request->get('search', '');
+            $entidadId = auth()->user()->obtenerEntidadId();
 
-            $resultado = $this->ventasService->listarVentas($page, $perPage, $search);
+            $resultado = $this->ventasService->listarVentas($page, $perPage, $search, $entidadId);
             
             return response()->json($resultado, 200);
         } catch (\Throwable $th) {

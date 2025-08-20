@@ -50,9 +50,16 @@ class VentasService
         });
     }
 
-    public function listarVentas($page = 1, $perPage = 10, $search = '')
+    public function listarVentas($page = 1, $perPage = 10, $search = '', $entidadId = null)
     {
         $query = Ventas::with(['empleado', 'productos']);
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->whereHas('empleado', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
 
         if (!empty($search)) {
             $query->whereHas('productos', function ($q) use ($search) {
