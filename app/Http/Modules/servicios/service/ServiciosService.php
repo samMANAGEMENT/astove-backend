@@ -295,18 +295,34 @@ class ServiciosService
         }, 0);
 
         // Trae los ingresos adicionales del mes y año actual (excluyendo servicios ocasionales)
-        $ingresosAdicionales = IngresosAdicionales::whereYear('fecha', $anioActual)
+        $queryIngresos = IngresosAdicionales::whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual)
-            ->where('tipo', '!=', 'servicio_ocasional')
-            ->get();
+            ->where('tipo', '!=', 'servicio_ocasional');
+        
+        // Filtrar ingresos adicionales por entidad si se proporciona
+        if ($entidadId) {
+            $queryIngresos->whereHas('operador', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $ingresosAdicionales = $queryIngresos->get();
 
         // Suma el total de ingresos adicionales (excluyendo servicios ocasionales)
         $totalIngresosAdicionales = $ingresosAdicionales->sum('monto');
 
         // Trae las ventas de productos del mes y año actual
-        $ventas = \App\Http\Modules\Ventas\Models\Ventas::whereYear('created_at', $anioActual)
-            ->whereMonth('created_at', $mesActual)
-            ->get();
+        $queryVentas = \App\Http\Modules\Ventas\Models\Ventas::whereYear('created_at', $anioActual)
+            ->whereMonth('created_at', $mesActual);
+        
+        // Filtrar ventas por entidad si se proporciona
+        if ($entidadId) {
+            $queryVentas->whereHas('empleado', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $ventas = $queryVentas->get();
 
         // Suma el total de ventas (se registra por el costo unitario)
         $totalVentas = $ventas->sum('total');
@@ -343,18 +359,34 @@ class ServiciosService
         }, 0);
 
         // Trae los ingresos adicionales del mes y año actual (excluyendo servicios ocasionales)
-        $ingresosAdicionales = IngresosAdicionales::whereYear('fecha', $anioActual)
+        $queryIngresos = IngresosAdicionales::whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual)
-            ->where('tipo', '!=', 'servicio_ocasional')
-            ->get();
+            ->where('tipo', '!=', 'servicio_ocasional');
+        
+        // Filtrar ingresos adicionales por entidad si se proporciona
+        if ($entidadId) {
+            $queryIngresos->whereHas('operador', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $ingresosAdicionales = $queryIngresos->get();
 
         // Suma el total de ingresos adicionales (excluyendo servicios ocasionales)
         $totalIngresosAdicionales = $ingresosAdicionales->sum('monto');
 
         // Trae las ventas de productos del mes y año actual
-        $ventas = \App\Http\Modules\Ventas\Models\Ventas::whereYear('created_at', $anioActual)
-            ->whereMonth('created_at', $mesActual)
-            ->get();
+        $queryVentas = \App\Http\Modules\Ventas\Models\Ventas::whereYear('created_at', $anioActual)
+            ->whereMonth('created_at', $mesActual);
+        
+        // Filtrar ventas por entidad si se proporciona
+        if ($entidadId) {
+            $queryVentas->whereHas('empleado', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $ventas = $queryVentas->get();
 
         // Suma el total de ventas (se registra por el costo unitario)
         $totalVentas = $ventas->sum('total');
@@ -415,15 +447,31 @@ class ServiciosService
         $servicios = $query->get();
 
         // Trae los ingresos adicionales del mes y año actual (excluyendo servicios ocasionales)
-        $ingresosAdicionales = IngresosAdicionales::whereYear('fecha', $anioActual)
+        $queryIngresos = IngresosAdicionales::whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual)
-            ->where('tipo', '!=', 'servicio_ocasional')
-            ->get();
+            ->where('tipo', '!=', 'servicio_ocasional');
+        
+        // Filtrar ingresos adicionales por entidad si se proporciona
+        if ($entidadId) {
+            $queryIngresos->whereHas('operador', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $ingresosAdicionales = $queryIngresos->get();
 
         // Trae las ventas de productos del mes y año actual
-        $ventas = \App\Http\Modules\Ventas\Models\Ventas::whereYear('created_at', $anioActual)
-            ->whereMonth('created_at', $mesActual)
-            ->get();
+        $queryVentas = \App\Http\Modules\Ventas\Models\Ventas::whereYear('created_at', $anioActual)
+            ->whereMonth('created_at', $mesActual);
+        
+        // Filtrar ventas por entidad si se proporciona
+        if ($entidadId) {
+            $queryVentas->whereHas('empleado', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $ventas = $queryVentas->get();
 
         // Calcular totales por método de pago (servicios + ingresos adicionales + ventas)
         $totalEfectivo = $servicios->sum('monto_efectivo') + $ingresosAdicionales->sum('monto_efectivo') + $ventas->sum('monto_efectivo');
@@ -497,10 +545,18 @@ class ServiciosService
         $servicios = $query->get();
 
         // Trae los ingresos adicionales del mes y año actual (excluyendo servicios ocasionales)
-        $ingresosAdicionales = IngresosAdicionales::whereYear('fecha', $anioActual)
+        $queryIngresos = IngresosAdicionales::whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual)
-            ->where('tipo', '!=', 'servicio_ocasional')
-            ->get();
+            ->where('tipo', '!=', 'servicio_ocasional');
+        
+        // Filtrar ingresos adicionales por entidad si se proporciona
+        if ($entidadId) {
+            $queryIngresos->whereHas('operador', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $ingresosAdicionales = $queryIngresos->get();
 
         // Trae las ventas de productos del mes y año actual
         $ventas = \App\Http\Modules\Ventas\Models\Ventas::whereYear('created_at', $anioActual)
@@ -626,16 +682,24 @@ class ServiciosService
             });
     }
 
-    public function totalIngresosAdicionales()
+    public function totalIngresosAdicionales($entidadId = null)
     {
         // Obtiene el mes y año actual
         $mesActual = date('m');
         $anioActual = date('Y');
 
         // Trae los ingresos adicionales del mes y año actual
-        $ingresos = IngresosAdicionales::whereYear('fecha', $anioActual)
-            ->whereMonth('fecha', $mesActual)
-            ->get();
+        $query = IngresosAdicionales::whereYear('fecha', $anioActual)
+            ->whereMonth('fecha', $mesActual);
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->whereHas('operador', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $ingresos = $query->get();
 
         // Calcular totales por método de pago
         $totalEfectivo = $ingresos->sum('monto_efectivo');
@@ -682,10 +746,18 @@ class ServiciosService
         $servicios = $query->get();
 
         // Trae los ingresos adicionales del mes y año actual (excluyendo servicios ocasionales)
-        $ingresosAdicionales = IngresosAdicionales::whereYear('fecha', $anioActual)
+        $queryIngresos = IngresosAdicionales::whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual)
-            ->where('tipo', '!=', 'servicio_ocasional')
-            ->get();
+            ->where('tipo', '!=', 'servicio_ocasional');
+        
+        // Filtrar ingresos adicionales por entidad si se proporciona
+        if ($entidadId) {
+            $queryIngresos->whereHas('operador', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $ingresosAdicionales = $queryIngresos->get();
 
         // Calcular ingresos de servicios
         $ingresosServicios = $servicios->reduce(function ($carry, $item) {

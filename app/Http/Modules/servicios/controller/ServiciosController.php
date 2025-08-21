@@ -198,7 +198,9 @@ class ServiciosController extends Controller
     public function totalIngresosAdicionales()
     {
         try {
-            $totales = $this->serviciosService->totalIngresosAdicionales();
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
+            $totales = $this->serviciosService->totalIngresosAdicionales($entidadId);
             return response()->json($totales, 200);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);

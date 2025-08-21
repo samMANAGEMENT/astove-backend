@@ -40,7 +40,7 @@ class Productos extends Model
 
     public function getGananciaAttribute()
     {
-        return $this->costo_unitario - $this->precio_unitario;
+        return $this->precio_unitario - $this->costo_unitario;
     }
 
     public function getGananciaTotalAttribute()
