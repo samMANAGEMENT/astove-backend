@@ -38,7 +38,9 @@ class VentasController extends Controller
             $page = $request->get('page', 1);
             $perPage = $request->get('per_page', 10);
             $search = $request->get('search', '');
-            $entidadId = auth()->user()->obtenerEntidadId();
+            
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
 
             $resultado = $this->ventasService->listarVentas($page, $perPage, $search, $entidadId);
             
@@ -54,7 +56,10 @@ class VentasController extends Controller
     public function obtenerVenta($id): JsonResponse
     {
         try {
-            $venta = $this->ventasService->obtenerVenta($id);
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
+            
+            $venta = $this->ventasService->obtenerVenta($id, $entidadId);
             return response()->json($venta, 200);
         } catch (\Throwable $th) {
             return response()->json([
@@ -67,7 +72,10 @@ class VentasController extends Controller
     public function eliminarVenta($id): JsonResponse
     {
         try {
-            $this->ventasService->eliminarVenta($id);
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
+            
+            $this->ventasService->eliminarVenta($id, $entidadId);
             return response()->json([
                 'message' => 'Venta eliminada exitosamente'
             ], 200);
@@ -82,7 +90,10 @@ class VentasController extends Controller
     public function obtenerEstadisticas(): JsonResponse
     {
         try {
-            $estadisticas = $this->ventasService->obtenerEstadisticas();
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
+            
+            $estadisticas = $this->ventasService->obtenerEstadisticas($entidadId);
             return response()->json($estadisticas, 200);
         } catch (\Throwable $th) {
             return response()->json([

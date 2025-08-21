@@ -17,7 +17,16 @@ class ProductosController extends Controller
     public function crearProducto(CrearProductoRequest $request): JsonResponse
     {
         try {
-            $producto = $this->productosService->crearProducto($request->validated());
+            $data = $request->validated();
+            
+            // Si el usuario es admin y proporcionó entidad_id, usarla; si no, usar la del usuario
+            if (auth()->user()->esAdmin() && isset($data['entidad_id'])) {
+                $data['entidad_id'] = $data['entidad_id'];
+            } else {
+                $data['entidad_id'] = auth()->user()->obtenerEntidadId();
+            }
+            
+            $producto = $this->productosService->crearProducto($data);
             return response()->json([
                 'message' => 'Producto creado exitosamente',
                 'data' => $producto
@@ -37,8 +46,11 @@ class ProductosController extends Controller
             $perPage = $request->get('per_page', 10);
             $search = $request->get('search', '');
             $categoriaId = $request->get('categoria_id');
+            
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
 
-            $resultado = $this->productosService->listarProductos($page, $perPage, $search, $categoriaId);
+            $resultado = $this->productosService->listarProductos($page, $perPage, $search, $categoriaId, $entidadId);
             
             return response()->json($resultado, 200);
         } catch (\Throwable $th) {
@@ -52,7 +64,10 @@ class ProductosController extends Controller
     public function obtenerProducto($id): JsonResponse
     {
         try {
-            $producto = $this->productosService->obtenerProducto($id);
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
+            
+            $producto = $this->productosService->obtenerProducto($id, $entidadId);
             return response()->json($producto, 200);
         } catch (\Throwable $th) {
             return response()->json([
@@ -73,7 +88,10 @@ class ProductosController extends Controller
                 'stock' => 'sometimes|integer|min:0'
             ]);
 
-            $producto = $this->productosService->actualizarProducto($data, $id);
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
+            
+            $producto = $this->productosService->actualizarProducto($data, $id, $entidadId);
             
             return response()->json([
                 'message' => 'Producto actualizado exitosamente',
@@ -90,7 +108,10 @@ class ProductosController extends Controller
     public function eliminarProducto($id): JsonResponse
     {
         try {
-            $this->productosService->eliminarProducto($id);
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
+            
+            $this->productosService->eliminarProducto($id, $entidadId);
             return response()->json([
                 'message' => 'Producto eliminado exitosamente'
             ], 200);
@@ -105,7 +126,10 @@ class ProductosController extends Controller
     public function obtenerEstadisticas(): JsonResponse
     {
         try {
-            $estadisticas = $this->productosService->obtenerEstadisticas();
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
+            
+            $estadisticas = $this->productosService->obtenerEstadisticas($entidadId);
             return response()->json($estadisticas, 200);
         } catch (\Throwable $th) {
             return response()->json([
@@ -122,7 +146,10 @@ class ProductosController extends Controller
                 'cantidad' => 'required|integer'
             ]);
 
-            $producto = $this->productosService->actualizarStock($id, $request->cantidad);
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
+            
+            $producto = $this->productosService->actualizarStock($id, $request->cantidad, $entidadId);
             
             return response()->json([
                 'message' => 'Stock actualizado exitosamente',

@@ -12,9 +12,14 @@ class ProductosService
         return Productos::create($data);
     }
 
-    public function listarProductos($page = 1, $perPage = 10, $search = '', $categoriaId = null)
+    public function listarProductos($page = 1, $perPage = 10, $search = '', $categoriaId = null, $entidadId = null)
     {
         $query = Productos::with('categoria');
+
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->where('entidad_id', $entidadId);
+        }
 
         if (!empty($search)) {
             $query->where('nombre', 'like', '%' . $search . '%');
@@ -43,33 +48,61 @@ class ProductosService
         ];
     }
 
-    public function obtenerProducto($id)
+    public function obtenerProducto($id, $entidadId = null)
     {
-        return Productos::with('categoria')->findOrFail($id);
+        $query = Productos::with('categoria')->where('id', $id);
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->where('entidad_id', $entidadId);
+        }
+        
+        return $query->firstOrFail();
     }
 
-    public function actualizarProducto(array $data, $id)
+    public function actualizarProducto(array $data, $id, $entidadId = null)
     {
-        $producto = Productos::findOrFail($id);
+        $query = Productos::where('id', $id);
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->where('entidad_id', $entidadId);
+        }
+        
+        $producto = $query->firstOrFail();
         $producto->update($data);
         return $producto->fresh();
     }
 
-    public function eliminarProducto($id)
+    public function eliminarProducto($id, $entidadId = null)
     {
-        $producto = Productos::findOrFail($id);
+        $query = Productos::where('id', $id);
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->where('entidad_id', $entidadId);
+        }
+        
+        $producto = $query->firstOrFail();
         return $producto->delete();
     }
 
-    public function obtenerEstadisticas()
+    public function obtenerEstadisticas($entidadId = null)
     {
-        $totalProductos = Productos::count();
-        $totalStock = Productos::sum('stock');
-        $valorTotalInventario = Productos::sum(DB::raw('stock * costo_unitario'));
-        $gananciaTotalPotencial = Productos::sum(DB::raw('stock * (costo_unitario - precio_unitario)'));
+        $query = Productos::query();
         
-        $productosBajoStock = Productos::where('stock', '<=', 5)->count();
-        $productosStockOptimo = Productos::where('stock', '>', 10)->count();
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->where('entidad_id', $entidadId);
+        }
+        
+        $totalProductos = $query->count();
+        $totalStock = $query->sum('stock');
+        $valorTotalInventario = $query->sum(DB::raw('stock * costo_unitario'));
+        $gananciaTotalPotencial = $query->sum(DB::raw('stock * (precio_unitario - costo_unitario)'));
+        
+        $productosBajoStock = $query->where('stock', '<=', 5)->count();
+        $productosStockOptimo = $query->where('stock', '>', 10)->count();
 
         return [
             'total_productos' => $totalProductos,
@@ -81,9 +114,16 @@ class ProductosService
         ];
     }
 
-    public function actualizarStock($id, $cantidad)
+    public function actualizarStock($id, $cantidad, $entidadId = null)
     {
-        $producto = Productos::findOrFail($id);
+        $query = Productos::where('id', $id);
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->where('entidad_id', $entidadId);
+        }
+        
+        $producto = $query->firstOrFail();
         $producto->stock += $cantidad;
         $producto->save();
         return $producto;

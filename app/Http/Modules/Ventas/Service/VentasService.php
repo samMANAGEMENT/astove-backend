@@ -89,15 +89,33 @@ class VentasService
         ];
     }
 
-    public function obtenerVenta($id)
+    public function obtenerVenta($id, $entidadId = null)
     {
-        return Ventas::with(['empleado', 'productos'])->findOrFail($id);
+        $query = Ventas::with(['empleado', 'productos'])->where('id', $id);
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->whereHas('empleado', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        return $query->firstOrFail();
     }
 
-    public function eliminarVenta($id)
+    public function eliminarVenta($id, $entidadId = null)
     {
-        return DB::transaction(function () use ($id) {
-            $venta = Ventas::with('productos')->findOrFail($id);
+        return DB::transaction(function () use ($id, $entidadId) {
+            $query = Ventas::with('productos')->where('id', $id);
+            
+            // Filtrar por entidad si se proporciona
+            if ($entidadId) {
+                $query->whereHas('empleado', function ($q) use ($entidadId) {
+                    $q->where('entidad_id', $entidadId);
+                });
+            }
+            
+            $venta = $query->firstOrFail();
             
             // Restaurar stock de los productos
             foreach ($venta->productos as $producto) {
@@ -116,14 +134,28 @@ class VentasService
         });
     }
 
-    public function obtenerEstadisticas()
+    public function obtenerEstadisticas($entidadId = null)
     {
-        $totalVentas = Ventas::count();
-        $totalGanancia = Ventas::sum('ganancia_total');
-        $totalVentasHoy = Ventas::whereDate('created_at', today())->count();
-        $gananciaHoy = Ventas::whereDate('created_at', today())->sum('ganancia_total');
+        $query = Ventas::query();
+        
+        // Filtrar por entidad si se proporciona
+        if ($entidadId) {
+            $query->whereHas('empleado', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $totalVentas = $query->count();
+        $totalGanancia = $query->sum('ganancia_total');
+        $totalVentasHoy = $query->whereDate('created_at', today())->count();
+        $gananciaHoy = $query->whereDate('created_at', today())->sum('ganancia_total');
         
         $ventasPorMetodo = Ventas::select('metodo_pago', DB::raw('count(*) as total'))
+            ->when($entidadId, function ($q) use ($entidadId) {
+                return $q->whereHas('empleado', function ($subQ) use ($entidadId) {
+                    $subQ->where('entidad_id', $entidadId);
+                });
+            })
             ->groupBy('metodo_pago')
             ->get();
 

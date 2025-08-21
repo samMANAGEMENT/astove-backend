@@ -23,44 +23,50 @@ class ProductosSeeder extends Seeder
             [
                 'nombre' => 'Espectañas',
                 'categoria_id' => $categoria->id,
-                'precio_unitario' => 33300,
+                'precio_unitario' => 55000, // Precio de venta mayor al costo
                 'costo_unitario' => 44900,
-                'stock' => 12
+                'stock' => 12,
+                'entidad_id' => 1
             ],
             [
                 'nombre' => 'Bifasico 150Ml',
                 'categoria_id' => $categoria->id,
-                'precio_unitario' => 31800,
+                'precio_unitario' => 52000, // Precio de venta mayor al costo
                 'costo_unitario' => 42900,
-                'stock' => 12
+                'stock' => 12,
+                'entidad_id' => 1
             ],
             [
                 'nombre' => 'Mini Bifasico',
                 'categoria_id' => $categoria->id,
-                'precio_unitario' => 12980,
+                'precio_unitario' => 22000, // Precio de venta mayor al costo
                 'costo_unitario' => 17500,
-                'stock' => 12
+                'stock' => 12,
+                'entidad_id' => 1
             ],
             [
                 'nombre' => 'Repuestos',
                 'categoria_id' => $categoria->id,
-                'precio_unitario' => 8150,
+                'precio_unitario' => 15000, // Precio de venta mayor al costo
                 'costo_unitario' => 11000,
-                'stock' => 12
+                'stock' => 12,
+                'entidad_id' => 1
             ],
             [
-                'nombre' => 'Depilaro',
+                'nombre' => 'Depilador',
                 'categoria_id' => $categoria->id,
-                'precio_unitario' => 13705,
+                'precio_unitario' => 25000, // Precio de venta mayor al costo
                 'costo_unitario' => 18500,
-                'stock' => 12
+                'stock' => 12,
+                'entidad_id' => 1
             ],
             [
                 'nombre' => 'Pomo',
                 'categoria_id' => $categoria->id,
-                'precio_unitario' => 13705,
+                'precio_unitario' => 25000, // Precio de venta mayor al costo
                 'costo_unitario' => 18500,
-                'stock' => 12
+                'stock' => 12,
+                'entidad_id' => 1
             ]
         ];
 

@@ -25,13 +25,20 @@ class CrearProductoRequest extends FormRequest
      */
     public function rules()
     {
-        return [
+        $rules = [
             'nombre' => 'required|string|max:255',
             'categoria_id' => 'required|exists:categorias,id',
             'precio_unitario' => 'required|numeric|min:0',
             'costo_unitario' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0'
         ];
+
+        // Solo los admins pueden especificar entidad_id
+        if (auth()->user()->esAdmin()) {
+            $rules['entidad_id'] = 'sometimes|exists:entidades,id';
+        }
+
+        return $rules;
     }
 
     /**
@@ -55,7 +62,8 @@ class CrearProductoRequest extends FormRequest
             'costo_unitario.min' => 'El costo unitario no puede ser negativo',
             'stock.required' => 'El stock es requerido',
             'stock.integer' => 'El stock debe ser un número entero',
-            'stock.min' => 'El stock no puede ser negativo'
+            'stock.min' => 'El stock no puede ser negativo',
+            'entidad_id.exists' => 'La entidad seleccionada no existe'
         ];
     }
 

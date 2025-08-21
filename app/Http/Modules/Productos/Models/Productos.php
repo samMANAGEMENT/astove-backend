@@ -3,6 +3,7 @@
 namespace App\Http\Modules\Productos\Models;
 
 use App\Http\Modules\Categorias\Models\Categorias;
+use App\Http\Modules\Entidades\Models\Entidades;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,7 +18,8 @@ class Productos extends Model
         'categoria_id',
         'precio_unitario',
         'costo_unitario',
-        'stock'
+        'stock',
+        'entidad_id'
     ];
 
     protected $casts = [
@@ -29,6 +31,11 @@ class Productos extends Model
     public function categoria()
     {
         return $this->belongsTo(Categorias::class, 'categoria_id');
+    }
+
+    public function entidad()
+    {
+        return $this->belongsTo(Entidades::class, 'entidad_id');
     }
 
     public function getGananciaAttribute()
