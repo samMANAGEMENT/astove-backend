@@ -23,10 +23,10 @@ class EntidadesController
     public function listarEntidad()
     {
         try {
-            $entidad = $this->entidadesSerivce->listarEntidad();
-            return response()->json($entidad, 200);
+            $entidades = $this->entidadesSerivce->listarEntidad();
+            return response()->json(['entidades' => $entidades], 200);
         } catch (\Throwable $th) {
-            return response()->json(['ocurrio un error al momento de listar las entidades'], 500);
+            return response()->json(['error' => $th->getMessage()], 500);
         }
     }
 
