@@ -84,6 +84,12 @@ class RolesAndPermissionsSeeder extends Seeder
             ['nombre' => 'crear_usuarios', 'descripcion' => 'Crear usuarios', 'modulo' => 'usuarios'],
             ['nombre' => 'editar_usuarios', 'descripcion' => 'Editar usuarios', 'modulo' => 'usuarios'],
             ['nombre' => 'eliminar_usuarios', 'descripcion' => 'Eliminar usuarios', 'modulo' => 'usuarios'],
+            
+            // Inventario
+            ['nombre' => 'ver_inventario', 'descripcion' => 'Ver inventario', 'modulo' => 'inventario'],
+            ['nombre' => 'crear_inventario', 'descripcion' => 'Crear inventario', 'modulo' => 'inventario'],
+            ['nombre' => 'editar_inventario', 'descripcion' => 'Editar inventario', 'modulo' => 'inventario'],
+            ['nombre' => 'eliminar_inventario', 'descripcion' => 'Eliminar inventario', 'modulo' => 'inventario'],
         ];
 
         foreach ($permisos as $permiso) {
@@ -113,7 +119,8 @@ class RolesAndPermissionsSeeder extends Seeder
                     'ver_entidades',
                     'ver_gastos', 'crear_gastos', 'editar_gastos',
                     'ver_ingresos_adicionales', 'crear_ingresos_adicionales', 'editar_ingresos_adicionales',
-                    'ver_reportes', 'generar_reportes'
+                    'ver_reportes', 'generar_reportes',
+                    'ver_inventario', 'crear_inventario', 'editar_inventario', 'eliminar_inventario'
                 ]
             ],
             [

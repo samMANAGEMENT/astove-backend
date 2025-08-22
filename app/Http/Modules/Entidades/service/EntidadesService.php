@@ -4,6 +4,7 @@ namespace App\Http\Modules\Entidades\service;
 
 use App\Http\Modules\Entidades\models\Entidades;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class EntidadesService
 {
