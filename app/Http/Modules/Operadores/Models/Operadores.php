@@ -43,4 +43,9 @@ class Operadores extends Model
     {
         return $this->hasMany(\App\Http\Modules\Pagos\Models\Pagos::class, 'empleado_id');
     }
+
+    public function agendas()
+    {
+        return $this->hasMany(\App\Http\Modules\Agenda\Models\Agenda::class, 'operador_id');
+    }
 }

@@ -39,6 +39,18 @@ class RolesAndPermissionsSeeder extends Seeder
             ['nombre' => 'editar_operadores', 'descripcion' => 'Editar operadores', 'modulo' => 'operadores'],
             ['nombre' => 'eliminar_operadores', 'descripcion' => 'Eliminar operadores', 'modulo' => 'operadores'],
             
+            // Agendas
+            ['nombre' => 'ver_agendas', 'descripcion' => 'Ver agendas', 'modulo' => 'agendas'],
+            ['nombre' => 'crear_agendas', 'descripcion' => 'Crear agendas', 'modulo' => 'agendas'],
+            ['nombre' => 'editar_agendas', 'descripcion' => 'Editar agendas', 'modulo' => 'agendas'],
+            ['nombre' => 'eliminar_agendas', 'descripcion' => 'Eliminar agendas', 'modulo' => 'agendas'],
+            
+            // Horarios
+            ['nombre' => 'ver_horarios', 'descripcion' => 'Ver horarios', 'modulo' => 'agendas'],
+            ['nombre' => 'crear_horarios', 'descripcion' => 'Crear horarios', 'modulo' => 'agendas'],
+            ['nombre' => 'editar_horarios', 'descripcion' => 'Editar horarios', 'modulo' => 'agendas'],
+            ['nombre' => 'eliminar_horarios', 'descripcion' => 'Eliminar horarios', 'modulo' => 'agendas'],
+            
             // Productos
             ['nombre' => 'ver_productos', 'descripcion' => 'Ver productos', 'modulo' => 'productos'],
             ['nombre' => 'crear_productos', 'descripcion' => 'Crear productos', 'modulo' => 'productos'],
@@ -120,7 +132,9 @@ class RolesAndPermissionsSeeder extends Seeder
                     'ver_gastos', 'crear_gastos', 'editar_gastos',
                     'ver_ingresos_adicionales', 'crear_ingresos_adicionales', 'editar_ingresos_adicionales',
                     'ver_reportes', 'generar_reportes',
-                    'ver_inventario', 'crear_inventario', 'editar_inventario', 'eliminar_inventario'
+                    'ver_inventario', 'crear_inventario', 'editar_inventario', 'eliminar_inventario',
+                    'ver_agendas', 'crear_agendas', 'editar_agendas', 'eliminar_agendas',
+                    'ver_horarios', 'crear_horarios', 'editar_horarios', 'eliminar_horarios'
                 ]
             ],
             [
@@ -131,7 +145,9 @@ class RolesAndPermissionsSeeder extends Seeder
                     'ver_pagos',
                     'ver_servicios_empleado',
                     'ver_servicios',
-                    'ver_ingresos_adicionales'
+                    'ver_ingresos_adicionales',
+                    'ver_agendas',
+                    'ver_horarios'
                 ]
             ]
         ];
