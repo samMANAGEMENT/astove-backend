@@ -42,4 +42,5 @@ Route::middleware('auth:sanctum')->group(function () {
     require __DIR__ . '/productos/productos.php';
     require __DIR__ . '/gastos/gastos.php';
     require __DIR__ . '/inventario/inventario.php';
+    require __DIR__ . '/agenda/agenda.php';
 });
