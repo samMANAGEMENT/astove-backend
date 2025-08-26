@@ -105,4 +105,69 @@ class AgendaController extends Controller
             return response()->json(['error' => $th->getMessage()], 500);
         }
     }
+
+    public function consultarEspaciosDisponibles(Request $request, $agendaId)
+    {
+        try {
+            $fecha = $request->get('fecha');
+            $espacios = $this->agendaService->consultarEspaciosDisponibles($agendaId, $fecha);
+            return response()->json($espacios, 200);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
+
+    public function obtenerCalendarioAgenda(Request $request, $agendaId)
+    {
+        try {
+            $mes = $request->get('mes');
+            $anio = $request->get('anio');
+            $calendario = $this->agendaService->obtenerCalendarioAgenda($agendaId, $mes, $anio);
+            return response()->json($calendario, 200);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
+
+    public function crearCita(Request $request)
+    {
+        try {
+            $cita = $this->agendaService->crearCita($request->all());
+            return response()->json($cita, 201);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
+
+    public function actualizarCita(Request $request, $id)
+    {
+        try {
+            $cita = $this->agendaService->actualizarCita($id, $request->all());
+            return response()->json($cita, 200);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
+
+    public function eliminarCita($id)
+    {
+        try {
+            $result = $this->agendaService->eliminarCita($id);
+            return response()->json($result, 200);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
+
+    public function obtenerDisponibilidadTiempoReal(Request $request)
+    {
+        try {
+            $fecha = $request->get('fecha');
+            $entidadId = auth()->user()->obtenerEntidadId();
+            $disponibilidad = $this->agendaService->obtenerDisponibilidadTiempoReal($entidadId, $fecha);
+            return response()->json($disponibilidad, 200);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
 }

@@ -51,6 +51,12 @@ class RolesAndPermissionsSeeder extends Seeder
             ['nombre' => 'editar_horarios', 'descripcion' => 'Editar horarios', 'modulo' => 'agendas'],
             ['nombre' => 'eliminar_horarios', 'descripcion' => 'Eliminar horarios', 'modulo' => 'agendas'],
             
+            // Citas
+            ['nombre' => 'ver_citas', 'descripcion' => 'Ver citas', 'modulo' => 'agendas'],
+            ['nombre' => 'crear_citas', 'descripcion' => 'Crear citas', 'modulo' => 'agendas'],
+            ['nombre' => 'editar_citas', 'descripcion' => 'Editar citas', 'modulo' => 'agendas'],
+            ['nombre' => 'eliminar_citas', 'descripcion' => 'Eliminar citas', 'modulo' => 'agendas'],
+            
             // Productos
             ['nombre' => 'ver_productos', 'descripcion' => 'Ver productos', 'modulo' => 'productos'],
             ['nombre' => 'crear_productos', 'descripcion' => 'Crear productos', 'modulo' => 'productos'],
@@ -134,7 +140,8 @@ class RolesAndPermissionsSeeder extends Seeder
                     'ver_reportes', 'generar_reportes',
                     'ver_inventario', 'crear_inventario', 'editar_inventario', 'eliminar_inventario',
                     'ver_agendas', 'crear_agendas', 'editar_agendas', 'eliminar_agendas',
-                    'ver_horarios', 'crear_horarios', 'editar_horarios', 'eliminar_horarios'
+                    'ver_horarios', 'crear_horarios', 'editar_horarios', 'eliminar_horarios',
+                    'ver_citas', 'crear_citas', 'editar_citas', 'eliminar_citas'
                 ]
             ],
             [
@@ -147,7 +154,8 @@ class RolesAndPermissionsSeeder extends Seeder
                     'ver_servicios',
                     'ver_ingresos_adicionales',
                     'ver_agendas',
-                    'ver_horarios'
+                    'ver_horarios',
+                    'ver_citas'
                 ]
             ]
         ];

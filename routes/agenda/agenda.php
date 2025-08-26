@@ -17,5 +17,13 @@ Route::prefix('agenda')->group(function () {
         Route::put('modificar-horario/{id}', 'modificarHorario')->middleware(['permission:editar_horarios']);
         Route::delete('eliminar-horario/{id}', 'eliminarHorario')->middleware(['permission:eliminar_horarios']);
         Route::get('horarios-agenda/{agendaId}', 'obtenerHorariosPorAgenda')->middleware(['permission:ver_horarios']);
+        Route::get('consultar-espacios/{agendaId}', 'consultarEspaciosDisponibles')->middleware(['permission:ver_agendas']);
+        
+        // Rutas para calendario y citas
+        Route::get('calendario/{agendaId}', 'obtenerCalendarioAgenda')->middleware(['permission:ver_agendas']);
+        Route::get('disponibilidad-tiempo-real', 'obtenerDisponibilidadTiempoReal')->middleware(['permission:ver_agendas']);
+        Route::post('crear-cita', 'crearCita')->middleware(['permission:crear_citas']);
+        Route::put('actualizar-cita/{id}', 'actualizarCita')->middleware(['permission:editar_citas']);
+        Route::delete('eliminar-cita/{id}', 'eliminarCita')->middleware(['permission:eliminar_citas']);
     });
 });
