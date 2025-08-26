@@ -29,7 +29,8 @@ class CrearInventarioRequest extends FormRequest
             'nombre' => 'required|string|max:255',
             'cantidad' => 'required|integer|min:0',
             'costo_unitario' => 'required|numeric|min:0',
-            'estado' => 'sometimes|in:activo,inactivo,agotado'
+            'estado' => 'sometimes|in:activo,inactivo,agotado',
+            'tamanio_paquete' => 'sometimes|integer|min:1'
         ];
 
         // Solo los admins pueden especificar entidad_id
@@ -58,7 +59,9 @@ class CrearInventarioRequest extends FormRequest
             'costo_unitario.numeric' => 'El costo unitario debe ser un número',
             'costo_unitario.min' => 'El costo unitario no puede ser negativo',
             'estado.in' => 'El estado debe ser activo, inactivo o agotado',
-            'entidad_id.exists' => 'La entidad seleccionada no existe'
+            'entidad_id.exists' => 'La entidad seleccionada no existe',
+            'tamanio_paquete.integer' => 'El tamaño del paquete debe ser un número entero',
+            'tamanio_paquete.min' => 'El tamaño del paquete debe ser mayor a 0'
         ];
     }
 

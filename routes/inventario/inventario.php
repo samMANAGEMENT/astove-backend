@@ -19,6 +19,10 @@ Route::prefix('inventario')->group(function () {
         Route::put('/actualizar-stock/{id}', 'actualizarStock')->middleware('permission:editar_inventario');
         Route::put('/cambiar-estado/{id}', 'cambiarEstado')->middleware('permission:editar_inventario');
         
+        // Rutas de paquetes
+        Route::put('/actualizar-stock-paquetes/{id}', 'actualizarStockPorPaquetes')->middleware('permission:editar_inventario');
+        Route::get('/informacion-paquetes/{id}', 'obtenerInformacionPaquetes')->middleware('permission:ver_inventario');
+        
         // Rutas de movimientos
         Route::get('/movimientos/{id}', 'obtenerMovimientos')->middleware('permission:ver_inventario');
     });

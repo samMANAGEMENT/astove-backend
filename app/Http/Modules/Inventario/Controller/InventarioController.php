@@ -216,4 +216,51 @@ class InventarioController extends Controller
             ], 500);
         }
     }
+
+    // Métodos para manejo de paquetes
+    public function actualizarStockPorPaquetes(Request $request, $id): JsonResponse
+    {
+        try {
+            $request->validate([
+                'numero_paquetes' => 'required|integer|min:1',
+                'tipo' => 'required|in:agregar,reducir'
+            ]);
+
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
+            
+            $inventario = $this->inventarioService->actualizarStockPorPaquetes(
+                $id, 
+                $request->numero_paquetes, 
+                $request->tipo, 
+                $entidadId
+            );
+            
+            return response()->json([
+                'message' => 'Stock por paquetes actualizado exitosamente',
+                'data' => $inventario
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Error al actualizar el stock por paquetes',
+                'error' => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    public function obtenerInformacionPaquetes($id): JsonResponse
+    {
+        try {
+            $user = auth()->user();
+            $entidadId = $user->esAdmin() ? null : $user->obtenerEntidadId();
+            
+            $informacion = $this->inventarioService->obtenerInformacionPaquetes($id, $entidadId);
+            return response()->json($informacion, 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Error al obtener información de paquetes',
+                'error' => $th->getMessage()
+            ], 500);
+        }
+    }
 }
