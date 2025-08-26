@@ -172,8 +172,10 @@ class AgendaService
                 ->orderBy('hora_inicio')
                 ->get();
 
-            // Obtener citas para esta fecha
-            $citasDelDia = $citas->where('fecha', $fecha->format('Y-m-d'));
+            // Obtener citas para esta fecha específica
+            $citasDelDia = $citas->filter(function($cita) use ($fecha) {
+                return $cita->fecha === $fecha->format('Y-m-d');
+            });
 
             $calendario[] = [
                 'dia' => $dia,
