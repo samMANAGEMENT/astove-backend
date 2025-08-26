@@ -35,4 +35,9 @@ class Agenda extends Model
     {
         return $this->hasMany(Horario::class)->where('activo', true);
     }
+
+    public function citas()
+    {
+        return $this->hasMany(Cita::class);
+    }
 }

@@ -28,4 +28,9 @@ class Horario extends Model
     {
         return $this->belongsTo(Agenda::class);
     }
+
+    public function citas()
+    {
+        return $this->hasMany(Cita::class);
+    }
 }
