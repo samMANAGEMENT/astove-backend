@@ -33,6 +33,7 @@ class InventarioService
             'cantidad',
             'costo_unitario',
             'estado',
+            'tamanio_paquete',
             'created_at'
         ])
         ->orderBy('created_at', 'desc')
@@ -61,7 +62,12 @@ class InventarioService
             $query->where('entidad_id', $entidadId);
         }
         
-        return $query->firstOrFail();
+        $inventario = $query->firstOrFail();
+        
+        // Asegurar que los campos calculados estén disponibles
+        $inventario->loadMissing(['entidad', 'creadoPor']);
+        
+        return $inventario;
     }
 
     public function actualizarInventario(array $data, $id, $entidadId = null)
@@ -179,6 +185,46 @@ class InventarioService
                 'from' => ($page - 1) * $perPage + 1,
                 'to' => min($page * $perPage, $total)
             ]
+        ];
+    }
+
+    // Métodos para manejo de paquetes
+    public function actualizarStockPorPaquetes($id, $numeroPaquetes, $tipo = 'agregar', $entidadId = null)
+    {
+        $query = Inventario::where('id', $id);
+        
+        if ($entidadId) {
+            $query->where('entidad_id', $entidadId);
+        }
+        
+        $inventario = $query->firstOrFail();
+
+        if ($tipo === 'agregar') {
+            $inventario->agregarPaquetes($numeroPaquetes);
+        } else {
+            $inventario->reducirPaquetes($numeroPaquetes);
+        }
+
+        return $inventario->fresh(['entidad', 'creadoPor']);
+    }
+
+    public function obtenerInformacionPaquetes($id, $entidadId = null)
+    {
+        $query = Inventario::where('id', $id);
+        
+        if ($entidadId) {
+            $query->where('entidad_id', $entidadId);
+        }
+        
+        $inventario = $query->firstOrFail();
+        
+        return [
+            'tiene_paquetes' => $inventario->tiene_paquetes,
+            'tamanio_paquete' => $inventario->tamanio_paquete,
+            'numero_paquetes_disponibles' => $inventario->numero_paquetes_disponibles,
+            'cantidad_suelta' => $inventario->cantidad_suelta,
+            'costo_por_paquete' => $inventario->costo_por_paquete,
+            'informacion_paquetes' => $inventario->informacion_paquetes
         ];
     }
 }
