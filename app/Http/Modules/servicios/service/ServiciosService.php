@@ -1211,18 +1211,37 @@ class ServiciosService
         }
         
         // Usar transacción para asegurar que todos los servicios se creen o ninguno
-        return DB::transaction(function () use ($data, $serviciosConCalculos) {
+        return DB::transaction(function () use ($data, $serviciosConCalculos, $montoEfectivo, $montoTransferencia, $totalServicios) {
             $serviciosCreados = [];
+            $montoEfectivoRestante = $montoEfectivo;
+            $montoTransferenciaRestante = $montoTransferencia;
             
-            foreach ($serviciosConCalculos as $servicioCalculado) {
+            foreach ($serviciosConCalculos as $index => $servicioCalculado) {
+                // Calcular la proporción de este servicio respecto al total
+                $proporcion = $totalServicios > 0 ? $servicioCalculado['total_con_descuento'] / $totalServicios : 0;
+                
+                // Distribuir los montos proporcionalmente
+                $montoEfectivoServicio = round($montoEfectivo * $proporcion, 2);
+                $montoTransferenciaServicio = round($montoTransferencia * $proporcion, 2);
+                
+                // Para el último servicio, usar los montos restantes para evitar errores de redondeo
+                if ($index === count($serviciosConCalculos) - 1) {
+                    $montoEfectivoServicio = $montoEfectivoRestante;
+                    $montoTransferenciaServicio = $montoTransferenciaRestante;
+                } else {
+                    // Actualizar montos restantes
+                    $montoEfectivoRestante -= $montoEfectivoServicio;
+                    $montoTransferenciaRestante -= $montoTransferenciaServicio;
+                }
+                
                 $servicioData = [
                     'empleado_id' => $data['empleado_id'],
                     'servicio_id' => $servicioCalculado['servicio_id'],
                     'cantidad' => $servicioCalculado['cantidad'],
                     'fecha' => $data['fecha'],
                     'metodo_pago' => $data['metodo_pago'],
-                    'monto_efectivo' => $data['monto_efectivo'],
-                    'monto_transferencia' => $data['monto_transferencia'],
+                    'monto_efectivo' => $montoEfectivoServicio,
+                    'monto_transferencia' => $montoTransferenciaServicio,
                     'total_servicio' => $servicioCalculado['total_servicio'],
                     'descuento_porcentaje' => $servicioCalculado['descuento_porcentaje'],
                     'monto_descuento' => $servicioCalculado['monto_descuento'],
