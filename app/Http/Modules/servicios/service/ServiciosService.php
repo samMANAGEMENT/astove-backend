@@ -74,9 +74,6 @@ class ServiciosService
             // Usar Carbon con zona horaria explícita para asegurar la hora correcta
             $horaActual = \Carbon\Carbon::now('America/Bogota')->format('H:i:s');
             $data['fecha'] = $data['fecha'] . ' ' . $horaActual;
-            
-            // Log para debug
-            \Log::info('Servicio realizado - Fecha original: ' . $data['fecha'] . ' - Hora actual: ' . $horaActual);
         }
         
         return ServiciosRealizados::create($data);
@@ -446,6 +443,8 @@ class ServiciosService
         
         $servicios = $query->get();
 
+
+
         // Trae los ingresos adicionales del mes y año actual (excluyendo servicios ocasionales)
         $queryIngresos = IngresosAdicionales::whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual)
@@ -474,9 +473,18 @@ class ServiciosService
         $ventas = $queryVentas->get();
 
         // Calcular totales por método de pago (servicios + ingresos adicionales + ventas)
-        $totalEfectivo = $servicios->sum('monto_efectivo') + $ingresosAdicionales->sum('monto_efectivo') + $ventas->sum('monto_efectivo');
-        $totalTransferencia = $servicios->sum('monto_transferencia') + $ingresosAdicionales->sum('monto_transferencia') + $ventas->sum('monto_transferencia');
+        $serviciosEfectivo = $servicios->sum('monto_efectivo');
+        $serviciosTransferencia = $servicios->sum('monto_transferencia');
+        $ingresosAdicionalesEfectivo = $ingresosAdicionales->sum('monto_efectivo');
+        $ingresosAdicionalesTransferencia = $ingresosAdicionales->sum('monto_transferencia');
+        $ventasEfectivo = $ventas->sum('monto_efectivo');
+        $ventasTransferencia = $ventas->sum('monto_transferencia');
+        
+        $totalEfectivo = $serviciosEfectivo + $ingresosAdicionalesEfectivo + $ventasEfectivo;
+        $totalTransferencia = $serviciosTransferencia + $ingresosAdicionalesTransferencia + $ventasTransferencia;
         $totalGeneral = $totalEfectivo + $totalTransferencia;
+
+
 
         // Calcular ganancias netas por método de pago (solo de servicios)
         $gananciaEfectivo = $servicios->reduce(function ($carry, $item) {
@@ -1217,6 +1225,9 @@ class ServiciosService
             $montoTransferenciaRestante = $montoTransferencia;
             
             foreach ($serviciosConCalculos as $index => $servicioCalculado) {
+                // Determinar el método de pago para este servicio específico
+                $metodoPagoServicio = $data['metodo_pago'];
+                
                 // Calcular la proporción de este servicio respecto al total
                 $proporcion = $totalServicios > 0 ? $servicioCalculado['total_con_descuento'] / $totalServicios : 0;
                 
@@ -1234,12 +1245,21 @@ class ServiciosService
                     $montoTransferenciaRestante -= $montoTransferenciaServicio;
                 }
                 
+                // Determinar el método de pago real basado en los montos asignados
+                if ($montoEfectivoServicio > 0 && $montoTransferenciaServicio > 0) {
+                    $metodoPagoServicio = 'mixto';
+                } elseif ($montoEfectivoServicio > 0) {
+                    $metodoPagoServicio = 'efectivo';
+                } elseif ($montoTransferenciaServicio > 0) {
+                    $metodoPagoServicio = 'transferencia';
+                }
+                
                 $servicioData = [
                     'empleado_id' => $data['empleado_id'],
                     'servicio_id' => $servicioCalculado['servicio_id'],
                     'cantidad' => $servicioCalculado['cantidad'],
                     'fecha' => $data['fecha'],
-                    'metodo_pago' => $data['metodo_pago'],
+                    'metodo_pago' => $metodoPagoServicio,
                     'monto_efectivo' => $montoEfectivoServicio,
                     'monto_transferencia' => $montoTransferenciaServicio,
                     'total_servicio' => $servicioCalculado['total_servicio'],
@@ -1253,9 +1273,6 @@ class ServiciosService
                     // Usar Carbon con zona horaria explícita para asegurar la hora correcta
                     $horaActual = \Carbon\Carbon::now('America/Bogota')->format('H:i:s');
                     $servicioData['fecha'] = $servicioData['fecha'] . ' ' . $horaActual;
-                    
-                    // Log para debug
-                    \Log::info('Servicios múltiples - Fecha original: ' . $servicioData['fecha'] . ' - Hora actual: ' . $horaActual);
                 }
                 
                 $serviciosCreados[] = ServiciosRealizados::create($servicioData);
