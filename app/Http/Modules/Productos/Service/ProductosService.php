@@ -98,7 +98,7 @@ class ProductosService
         
         $totalProductos = $query->count();
         $totalStock = $query->sum('stock');
-        $valorTotalInventario = $query->sum(DB::raw('stock * costo_unitario'));
+        $valorTotalInventario = $query->sum(DB::raw('stock * precio_unitario'));
         $gananciaTotalPotencial = $query->sum(DB::raw('stock * (precio_unitario - costo_unitario)'));
         
         $productosBajoStock = $query->where('stock', '<=', 5)->count();
