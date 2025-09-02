@@ -18,6 +18,7 @@ Route::prefix('servicios')->group(function () {
 		Route::get('ganancias-por-metodo-pago', 'gananciasPorMetodoPago');
 		Route::get('total-ganancias-separadas', 'totalGananciasSeparadas');
         Route::put('modificar-servicio/{id}', 'modificarServicio');
+        Route::delete('eliminar-servicio/{id}', 'eliminarServicio');
         
         // Rutas para Ingresos Adicionales
         Route::post('crear-ingreso-adicional', 'crearIngresoAdicional');
