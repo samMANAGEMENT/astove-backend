@@ -861,6 +861,34 @@ class ServiciosService
         ];
     }
 
+    public function eliminarServicio(int $id)
+    {
+        $servicio = Servicios::find($id);
+        
+        if (!$servicio) {
+            throw new \Exception('Servicio no encontrado');
+        }
+
+        // Verificar si el servicio está activo
+        if ($servicio->estado) {
+            throw new \Exception('No se puede eliminar un servicio activo. Primero desactívalo.');
+        }
+
+        // Verificar si el servicio tiene servicios realizados asociados
+        $serviciosRealizados = ServiciosRealizados::where('servicio_id', $id)->count();
+        if ($serviciosRealizados > 0) {
+            throw new \Exception('No se puede eliminar un servicio que tiene servicios realizados asociados.');
+        }
+
+        // Eliminar el servicio
+        $servicio->delete();
+
+        return [
+            'message' => 'Servicio eliminado correctamente',
+            'id' => $id
+        ];
+    }
+
     public function gananciasDiarias($fecha, $entidadId = null)
     {
         // Trae los servicios realizados de la fecha específica
