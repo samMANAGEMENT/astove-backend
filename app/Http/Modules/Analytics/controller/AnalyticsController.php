@@ -33,15 +33,28 @@ class AnalyticsController extends Controller
             $request->validate([
                 'report_type' => 'required|string',
                 'start_date' => 'nullable|date',
-                'end_date' => 'nullable|date|after_or_equal:start_date',
-                'filters' => 'nullable|array'
+                'end_date' => 'nullable|date|after_or_equal:start_date'
             ]);
+
+            // Obtener la entidad del usuario autenticado
+            $user = auth()->user();
+            $userEntityId = null;
+
+            if ($user && $user->operador) {
+                $userEntityId = $user->operador->entidad_id;
+            }
+
+            // Si es admin, no aplicar filtro de entidad
+            $filters = [];
+            if (!$user->esAdmin() && $userEntityId) {
+                $filters['entidad_id'] = $userEntityId;
+            }
 
             $reportData = $this->analyticsService->generateReport(
                 $request->report_type,
                 $request->start_date,
                 $request->end_date,
-                $request->filters ?? []
+                $filters
             );
 
             return response()->json([
@@ -63,15 +76,28 @@ class AnalyticsController extends Controller
                 'report_type' => 'required|string',
                 'start_date' => 'nullable|date',
                 'end_date' => 'nullable|date|after_or_equal:start_date',
-                'filters' => 'nullable|array',
                 'format' => 'required|in:excel,csv'
             ]);
+
+            // Obtener la entidad del usuario autenticado
+            $user = auth()->user();
+            $userEntityId = null;
+
+            if ($user && $user->operador) {
+                $userEntityId = $user->operador->entidad_id;
+            }
+
+            // Si es admin, no aplicar filtro de entidad
+            $filters = [];
+            if (!$user->esAdmin() && $userEntityId) {
+                $filters['entidad_id'] = $userEntityId;
+            }
 
             $exportData = $this->analyticsService->exportReport(
                 $request->report_type,
                 $request->start_date,
                 $request->end_date,
-                $request->filters ?? [],
+                $filters,
                 $request->format
             );
 

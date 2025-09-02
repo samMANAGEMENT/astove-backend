@@ -78,6 +78,14 @@ class AnalyticsService
         $startDate = $startDate ? Carbon::parse($startDate) : Carbon::now()->startOfMonth();
         $endDate = $endDate ? Carbon::parse($endDate) : Carbon::now()->endOfMonth();
 
+        // Si no hay filtros de entidad, obtener la entidad del usuario autenticado
+        if (empty($filters['entidad_id'])) {
+            $user = auth()->user();
+            if ($user && $user->operador && !$user->esAdmin()) {
+                $filters['entidad_id'] = $user->operador->entidad_id;
+            }
+        }
+
         return match ($reportType) {
             'servicios_mas_utilizados' => $this->getServiciosMasUtilizados($startDate, $endDate, $filters),
             'operadores_mas_activos' => $this->getOperadoresMasActivos($startDate, $endDate, $filters),
@@ -382,9 +390,10 @@ class AnalyticsService
 
     private function getReporteCompletoGanancias(Carbon $startDate, Carbon $endDate, array $filters): array
     {
-        // Obtener todos los operadores con sus servicios realizados
+        // Obtener todos los operadores con sus servicios realizados del período específico
         $operadoresQuery = Operadores::with(['serviciosRealizados' => function($query) use ($startDate, $endDate) {
-            $query->whereBetween('fecha', [$startDate, $endDate])
+            $query->whereDate('fecha', '>=', $startDate->toDateString())
+                  ->whereDate('fecha', '<=', $endDate->toDateString())
                   ->with('servicio:id,nombre,precio,porcentaje_pago_empleado');
         }]);
 
@@ -403,20 +412,23 @@ class AnalyticsService
         $totalPagosOperadores = 0;
 
         foreach ($operadores as $operador) {
-            // Calcular ingresos por servicios del operador
+            // Calcular ingresos por servicios del operador en el período específico
             $ingresosServicios = $operador->serviciosRealizados->sum(function($servicio) {
                 return $servicio->total_con_descuento ?? ($servicio->cantidad * ($servicio->servicio->precio ?? 0));
             });
 
-            // Calcular pagos al operador por servicios
+            // Calcular pagos al operador por servicios en el período específico
             $pagosServicios = $operador->serviciosRealizados->sum(function($servicio) {
                 $precio = $servicio->servicio->precio ?? 0;
                 $porcentaje = $servicio->servicio->porcentaje_pago_empleado ?? 50;
                 return $servicio->cantidad * $precio * ($porcentaje / 100);
             });
 
-            // Calcular pagos realizados al operador (todos los pagos, sin filtro de fecha)
-            $pagosRealizados = Pagos::where('empleado_id', $operador->id)->sum('monto');
+            // Calcular pagos realizados al operador en el período específico
+            $pagosRealizados = Pagos::where('empleado_id', $operador->id)
+                ->whereDate('created_at', '>=', $startDate->toDateString())
+                ->whereDate('created_at', '<=', $endDate->toDateString())
+                ->sum('monto');
 
             // Calcular ganancia neta del operador (ingresos - pagos realizados)
             $gananciaNetaOperador = $ingresosServicios - $pagosRealizados;
@@ -430,15 +442,19 @@ class AnalyticsService
                 'pagos_pendientes' => max(0, $pagosServicios - $pagosRealizados),
                 'ganancia_neta_operador' => $gananciaNetaOperador,
                 'cantidad_servicios' => $operador->serviciosRealizados->count(),
-                'cantidad_pagos' => $operador->pagos->count()
+                'cantidad_pagos' => Pagos::where('empleado_id', $operador->id)
+                    ->whereDate('created_at', '>=', $startDate->toDateString())
+                    ->whereDate('created_at', '<=', $endDate->toDateString())
+                    ->count()
             ];
 
             $totalIngresosServicios += $ingresosServicios;
             $totalPagosOperadores += $pagosRealizados;
         }
 
-        // Calcular ingresos por ventas de productos
-        $ventasQuery = Ventas::whereBetween('created_at', [$startDate, $endDate]);
+        // Calcular ingresos por ventas de productos en el período específico
+        $ventasQuery = Ventas::whereDate('created_at', '>=', $startDate->toDateString())
+            ->whereDate('created_at', '<=', $endDate->toDateString());
         if (!empty($filters['entidad_id'])) {
             $ventasQuery->whereHas('empleado', function($q) use ($filters) {
                 $q->where('entidad_id', $filters['entidad_id']);
@@ -446,8 +462,9 @@ class AnalyticsService
         }
         $totalIngresosProductos = $ventasQuery->sum('total');
 
-        // Calcular ingresos adicionales
-        $ingresosAdicionalesQuery = IngresosAdicionales::whereBetween('fecha', [$startDate, $endDate])
+        // Calcular ingresos adicionales en el período específico
+        $ingresosAdicionalesQuery = IngresosAdicionales::whereDate('fecha', '>=', $startDate->toDateString())
+            ->whereDate('fecha', '<=', $endDate->toDateString())
             ->where('tipo', '!=', 'servicio_ocasional');
         if (!empty($filters['entidad_id'])) {
             $ingresosAdicionalesQuery->whereHas('empleado', function($q) use ($filters) {
@@ -456,8 +473,9 @@ class AnalyticsService
         }
         $totalIngresosAdicionales = $ingresosAdicionalesQuery->sum('monto');
 
-        // Calcular gastos operativos
-        $gastosQuery = GastosOperativos::whereBetween('fecha', [$startDate, $endDate]);
+        // Calcular gastos operativos en el período específico
+        $gastosQuery = GastosOperativos::whereDate('fecha', '>=', $startDate->toDateString())
+            ->whereDate('fecha', '<=', $endDate->toDateString());
         if (!empty($filters['entidad_id'])) {
             $gastosQuery->where('entidad_id', $filters['entidad_id']);
         }
@@ -466,6 +484,21 @@ class AnalyticsService
         // Calcular ganancia total del negocio
         $ingresosTotales = $totalIngresosServicios + $totalIngresosProductos + $totalIngresosAdicionales;
         $gananciaTotal = $ingresosTotales - $totalPagosOperadores - $totalGastos;
+
+        // Calcular totales por método de pago
+        $totalEfectivo = 0;
+        $totalTransferencia = 0;
+
+        foreach ($operadores as $operador) {
+            foreach ($operador->serviciosRealizados as $servicio) {
+                if ($servicio->monto_efectivo > 0) {
+                    $totalEfectivo += $servicio->monto_efectivo;
+                }
+                if ($servicio->monto_transferencia > 0) {
+                    $totalTransferencia += $servicio->monto_transferencia;
+                }
+            }
+        }
 
         return [
             'title' => 'Reporte Completo de Ganancias',
@@ -491,7 +524,9 @@ class AnalyticsService
                 'pagos_operadores' => $totalPagosOperadores,
                 'gastos_operativos' => $totalGastos,
                 'ganancia_total_negocio' => $gananciaTotal,
-                'porcentaje_ganancia' => $ingresosTotales > 0 ? ($gananciaTotal / $ingresosTotales) * 100 : 0
+                'porcentaje_ganancia' => $ingresosTotales > 0 ? ($gananciaTotal / $ingresosTotales) * 100 : 0,
+                'total_efectivo' => $totalEfectivo,
+                'total_transferencia' => $totalTransferencia
             ]
         ];
     }
