@@ -217,6 +217,32 @@ class PagosService
 
         $gananciaNeta = $ingresosTotales - $totalPagarEmpleados - $totalGastos;
 
+        // Calcular datos del mes anterior para comparaciones
+        $mesAnterior = $mesActual == 1 ? 12 : $mesActual - 1;
+        $anioAnterior = $mesActual == 1 ? $anioActual - 1 : $anioActual;
+
+        // Ingresos del mes anterior
+        $queryMesAnterior = ServiciosRealizados::with('servicio')
+            ->whereYear('fecha', $anioAnterior)
+            ->whereMonth('fecha', $mesAnterior);
+        
+        if ($entidadId) {
+            $queryMesAnterior->whereHas('servicio', function ($q) use ($entidadId) {
+                $q->where('entidad_id', $entidadId);
+            });
+        }
+        
+        $serviciosMesAnterior = $queryMesAnterior->get();
+        $ingresosTotalesMesAnterior = $serviciosMesAnterior->reduce(function ($carry, $item) {
+            return $carry + ($item->cantidad * ($item->servicio->precio ?? 0));
+        }, 0);
+
+        // Gastos del mes anterior
+        $totalGastosMesAnterior = \App\Http\Modules\Gastos\models\GastosOperativos::where('entidad_id', $entidadId)
+            ->whereYear('fecha', $anioAnterior)
+            ->whereMonth('fecha', $mesAnterior)
+            ->sum('monto');
+
         return [
             'ingresos_totales' => $ingresosTotales,
             'total_pagar_empleados' => $totalPagarEmpleados,
@@ -224,7 +250,10 @@ class PagosService
             'ganancia_neta' => $gananciaNeta,
             'porcentaje_ganancia' => $ingresosTotales > 0 ? ($gananciaNeta / $ingresosTotales) * 100 : 0,
             'mes' => $mesActual,
-            'anio' => $anioActual
+            'anio' => $anioActual,
+            // Datos del mes anterior para comparaciones
+            'ingresos_totales_mes_anterior' => $ingresosTotalesMesAnterior,
+            'gastos_mes_anterior' => $totalGastosMesAnterior
         ];
     }
 
