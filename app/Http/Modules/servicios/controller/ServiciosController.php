@@ -49,12 +49,13 @@ class ServiciosController extends Controller
         }
     }
 
-    public function modificarServicio(Request $data, $id)
+    public function modificarServicio(Request $data, int $id)
     {
         try {
             $entidadId = auth()->user()->obtenerEntidadId();
             $servicio = $this->serviciosService->modificarServicio($data->only([
                 'nombre',
+                'estado',
                 'precio',
                 'porcentaje_pago_empleado'
             ]), $id, $entidadId);
