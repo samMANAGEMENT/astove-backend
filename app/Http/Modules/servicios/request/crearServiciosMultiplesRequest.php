@@ -28,7 +28,7 @@ class crearServiciosMultiplesRequest extends FormRequest
         return [
             'empleado_id' => 'required|integer|exists:operadores,id',
             'fecha' => 'required|date',
-            'metodo_pago' => 'required|in:efectivo,transferencia',
+            'metodo_pago' => 'required|in:efectivo,transferencia,mixto',
             'monto_efectivo' => 'required|numeric|min:0',
             'monto_transferencia' => 'required|numeric|min:0',
             'servicios' => 'required|array|min:1',
@@ -51,7 +51,7 @@ class crearServiciosMultiplesRequest extends FormRequest
             'fecha.required' => 'La fecha es requerida',
             'fecha.date' => 'La fecha debe tener un formato válido',
             'metodo_pago.required' => 'El método de pago es requerido',
-            'metodo_pago.in' => 'El método de pago debe ser efectivo o transferencia',
+            'metodo_pago.in' => 'El método de pago debe ser efectivo, transferencia o mixto',
             'monto_efectivo.required' => 'El monto en efectivo es requerido',
             'monto_efectivo.min' => 'El monto en efectivo debe ser mayor o igual a 0',
             'monto_transferencia.required' => 'El monto en transferencia es requerido',
