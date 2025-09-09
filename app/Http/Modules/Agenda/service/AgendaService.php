@@ -20,7 +20,11 @@ class AgendaService
 
     public function listarAgendas($entidadId)
     {
-        return Agenda::with(['operador', 'horariosActivos'])
+        return Agenda::select(['id','operador_id','nombre','descripcion','activa'])
+            ->with(['operador' => function($q){
+                $q->select('id','nombre','apellido');
+            }])
+            ->withCount(['horariosActivos as horarios_count'])
             ->whereHas('operador', function ($query) use ($entidadId) {
                 $query->where('entidad_id', $entidadId);
             })
@@ -29,7 +33,11 @@ class AgendaService
 
     public function obtenerAgenda($id)
     {
-        return Agenda::with(['operador', 'horariosActivos'])->findOrFail($id);
+        return Agenda::select(['id','operador_id','nombre','descripcion','activa'])
+            ->with(['operador' => function($q){
+                $q->select('id','nombre','apellido');
+            }])
+            ->findOrFail($id);
     }
 
     public function modificarAgenda($id, array $data)
@@ -70,7 +78,8 @@ class AgendaService
 
     public function obtenerHorariosPorAgenda($agendaId)
     {
-        return Horario::where('agenda_id', $agendaId)
+        return Horario::select(['id','agenda_id','titulo','hora_inicio','hora_fin','dia_semana','color','notas','activo'])
+            ->where('agenda_id', $agendaId)
             ->where('activo', true)
             ->get();
     }
@@ -105,8 +114,14 @@ class AgendaService
             ->orderBy('hora_inicio')
             ->get();
 
-        // Calcular espacios disponibles (por ahora asumimos que cada horario tiene capacidad ilimitada)
-        $espaciosDisponibles = $horariosDelDia->map(function ($horario) {
+        // Obtener citas existentes para esta agenda y fecha
+        $citasDelDia = \App\Http\Modules\Agenda\Models\Cita::where('agenda_id', $agenda->id)
+            ->where('fecha', $fecha)
+            ->get();
+
+        // Marcar disponibilidad real por horario (capacidad 1 por defecto)
+        $espaciosDisponibles = $horariosDelDia->map(function ($horario) use ($citasDelDia) {
+            $citaExistente = $citasDelDia->where('horario_id', $horario->id)->first();
             return [
                 'id' => $horario->id,
                 'titulo' => $horario->titulo,
@@ -114,10 +129,16 @@ class AgendaService
                 'hora_fin' => $horario->hora_fin,
                 'color' => $horario->color,
                 'notas' => $horario->notas,
-                'disponible' => true, // Por ahora siempre disponible
-                'capacidad' => 'Ilimitada', // Por ahora capacidad ilimitada
-                'ocupados' => 0, // Por ahora 0 ocupados
-                'disponibles' => 'Ilimitados' // Por ahora ilimitados
+                'disponible' => !$citaExistente,
+                'cita_existente' => $citaExistente ? [
+                    'id' => $citaExistente->id,
+                    'cliente_nombre' => $citaExistente->cliente_nombre,
+                    'servicio' => $citaExistente->servicio,
+                    'estado' => $citaExistente->estado
+                ] : null,
+                'capacidad' => 1,
+                'ocupados' => $citaExistente ? 1 : 0,
+                'disponibles' => $citaExistente ? 0 : 1
             ];
         });
 
@@ -136,7 +157,8 @@ class AgendaService
             'dia_semana' => $diaSemanaEspanol,
             'horarios_disponibles' => $espaciosDisponibles,
             'total_horarios' => $espaciosDisponibles->count(),
-            'horarios_con_espacio' => $espaciosDisponibles->where('disponible', true)->count()
+            'horarios_con_espacio' => $espaciosDisponibles->where('disponible', true)->count(),
+            'horarios_ocupados' => $espaciosDisponibles->where('disponible', false)->count()
         ];
     }
 
@@ -172,9 +194,12 @@ class AgendaService
                 ->orderBy('hora_inicio')
                 ->get();
 
-            // Obtener citas para esta fecha específica
+            // Obtener citas para esta fecha específica (comparación robusta de fecha)
             $citasDelDia = $citas->filter(function($cita) use ($fecha) {
-                return $cita->fecha === $fecha->format('Y-m-d');
+                $citaFecha = $cita->fecha instanceof \Carbon\Carbon
+                    ? $cita->fecha->format('Y-m-d')
+                    : \Carbon\Carbon::parse($cita->fecha)->format('Y-m-d');
+                return $citaFecha === $fecha->format('Y-m-d');
             });
 
             $calendario[] = [
@@ -227,7 +252,7 @@ class AgendaService
 
     public function crearCita($data)
     {
-        return \DB::transaction(function () use ($data) {
+        return DB::transaction(function () use ($data) {
             // Verificar que el horario esté disponible
             $citaExistente = \App\Http\Modules\Agenda\Models\Cita::where('agenda_id', $data['agenda_id'])
                 ->where('horario_id', $data['horario_id'])
@@ -280,7 +305,9 @@ class AgendaService
         $diaSemanaEspanol = $diasSemana[$diaSemana] ?? 'lunes';
 
         // Obtener todas las agendas de la entidad con sus operadores y horarios
-        $agendas = Agenda::with(['operador', 'horariosActivos'])
+        $agendas = Agenda::select(['id','operador_id','nombre','activa'])
+            ->with(['operador' => function($q){ $q->select('id','nombre','apellido'); }])
+            ->withCount(['horariosActivos as total_horarios_activos'])
             ->whereHas('operador', function ($query) use ($entidadId) {
                 $query->where('entidad_id', $entidadId);
             })
