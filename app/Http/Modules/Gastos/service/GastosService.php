@@ -19,7 +19,8 @@ class GastosService
             'entidad_id' => $entidadId,
             'descripcion' => $data['descripcion'],
             'monto' => $data['monto'],
-            'fecha' => $data['fecha']
+            'fecha' => $data['fecha'],
+            'metodo_pago' => $data['metodo_pago']
         ]);
     }
 

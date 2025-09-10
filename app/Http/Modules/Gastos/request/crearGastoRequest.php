@@ -26,7 +26,8 @@ class crearGastoRequest extends FormRequest
         return [
             'descripcion' => 'required|string|max:255',
             'monto' => 'required|numeric|min:0',
-            'fecha' => 'required|date'
+            'fecha' => 'required|date',
+            'metodo_pago'=> 'required|string|max:100'
         ];
     }
 
