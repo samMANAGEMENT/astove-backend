@@ -13,7 +13,8 @@ class GastosOperativos extends Model
         'entidad_id',
         'descripcion',
         'monto',
-        'fecha'
+        'fecha',
+        'metodo_pago'
     ];
 
     protected $casts = [
