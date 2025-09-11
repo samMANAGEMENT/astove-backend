@@ -102,11 +102,11 @@ class AnalyticsService
     private function getServiciosMasUtilizados(Carbon $startDate, Carbon $endDate, array $filters): array
     {
         $query = ServiciosRealizados::select([
-                'servicios.nombre as servicio',
-                DB::raw('COUNT(*) as cantidad_realizada'),
-                DB::raw('SUM(servicios_realizados.total_servicio) as ingresos_totales'),
-                DB::raw('AVG(servicios_realizados.total_servicio) as promedio_por_servicio')
-            ])
+            'servicios.nombre as servicio',
+            DB::raw('COUNT(*) as cantidad_realizada'),
+            DB::raw('SUM(servicios_realizados.total_servicio) as ingresos_totales'),
+            DB::raw('AVG(servicios_realizados.total_servicio) as promedio_por_servicio')
+        ])
             ->join('servicios', 'servicios_realizados.servicio_id', '=', 'servicios.id')
             ->whereBetween('servicios_realizados.fecha', [$startDate, $endDate])
             ->groupBy('servicios.id', 'servicios.nombre')
@@ -114,7 +114,7 @@ class AnalyticsService
 
         if (!empty($filters['entidad_id'])) {
             $query->join('operadores', 'servicios_realizados.empleado_id', '=', 'operadores.id')
-                  ->where('operadores.entidad_id', $filters['entidad_id']);
+                ->where('operadores.entidad_id', $filters['entidad_id']);
         }
 
         $data = $query->get();
@@ -140,13 +140,13 @@ class AnalyticsService
     private function getOperadoresMasActivos(Carbon $startDate, Carbon $endDate, array $filters): array
     {
         $query = ServiciosRealizados::select([
-                DB::raw('CONCAT(operadores.nombre, " ", operadores.apellido) as operador'),
-                'entidades.nombre as entidad',
-                'cargos.nombre as cargo',
-                DB::raw('COUNT(*) as servicios_realizados'),
-                DB::raw('SUM(servicios_realizados.total_servicio) as ingresos_generados'),
-                DB::raw('AVG(servicios_realizados.total_servicio) as promedio_por_servicio')
-            ])
+            DB::raw('CONCAT(operadores.nombre, " ", operadores.apellido) as operador'),
+            'entidades.nombre as entidad',
+            'cargos.nombre as cargo',
+            DB::raw('COUNT(*) as servicios_realizados'),
+            DB::raw('SUM(servicios_realizados.total_servicio) as ingresos_generados'),
+            DB::raw('AVG(servicios_realizados.total_servicio) as promedio_por_servicio')
+        ])
             ->join('operadores', 'servicios_realizados.empleado_id', '=', 'operadores.id')
             ->join('entidades', 'operadores.entidad_id', '=', 'entidades.id')
             ->join('cargos', 'operadores.cargo_id', '=', 'cargos.id')
@@ -184,20 +184,21 @@ class AnalyticsService
     private function getRendimientoOperadores(Carbon $startDate, Carbon $endDate, array $filters): array
     {
         $query = ServiciosRealizados::select([
-                DB::raw('CONCAT(operadores.nombre, " ", operadores.apellido) as operador'),
-                'entidades.nombre as entidad',
-                DB::raw('COUNT(*) as servicios_realizados'),
-                DB::raw('SUM(servicios_realizados.total_servicio) as ingresos_totales'),
-                DB::raw('SUM(servicios_realizados.monto_efectivo) as pagos_efectivo'),
-                DB::raw('SUM(servicios_realizados.monto_transferencia) as pagos_transferencia'),
-                DB::raw('AVG(servicios_realizados.total_servicio) as promedio_por_servicio'),
-                DB::raw('COUNT(DISTINCT DATE(servicios_realizados.fecha)) as dias_trabajados')
-            ])
+            DB::raw("(operadores.nombre || ' ' || operadores.apellido) as operador"),
+            'entidades.nombre as entidad',
+            DB::raw('COUNT(*) as servicios_realizados'),
+            DB::raw('SUM(servicios_realizados.total_servicio) as ingresos_totales'),
+            DB::raw('SUM(servicios_realizados.monto_efectivo) as pagos_efectivo'),
+            DB::raw('SUM(servicios_realizados.monto_transferencia) as pagos_transferencia'),
+            DB::raw('AVG(servicios_realizados.total_servicio) as promedio_por_servicio'),
+            DB::raw('COUNT(DISTINCT DATE(servicios_realizados.fecha)) as dias_trabajados')
+        ])
             ->join('operadores', 'servicios_realizados.empleado_id', '=', 'operadores.id')
             ->join('entidades', 'operadores.entidad_id', '=', 'entidades.id')
             ->whereBetween('servicios_realizados.fecha', [$startDate, $endDate])
             ->groupBy('operadores.id', 'operadores.nombre', 'operadores.apellido', 'entidades.nombre')
             ->orderBy('ingresos_totales', 'desc');
+
 
         if (!empty($filters['entidad_id'])) {
             $query->where('operadores.entidad_id', $filters['entidad_id']);
@@ -231,13 +232,13 @@ class AnalyticsService
     private function getIngresosPorServicio(Carbon $startDate, Carbon $endDate, array $filters): array
     {
         $query = ServiciosRealizados::select([
-                'servicios.nombre as servicio',
-                DB::raw('COUNT(*) as cantidad_realizada'),
-                DB::raw('SUM(servicios_realizados.total_servicio) as ingresos_totales'),
-                DB::raw('SUM(servicios_realizados.monto_efectivo) as ingresos_efectivo'),
-                DB::raw('SUM(servicios_realizados.monto_transferencia) as ingresos_transferencia'),
-                DB::raw('AVG(servicios_realizados.total_servicio) as promedio_por_servicio')
-            ])
+            'servicios.nombre as servicio',
+            DB::raw('COUNT(*) as cantidad_realizada'),
+            DB::raw('SUM(servicios_realizados.total_servicio) as ingresos_totales'),
+            DB::raw('SUM(servicios_realizados.monto_efectivo) as ingresos_efectivo'),
+            DB::raw('SUM(servicios_realizados.monto_transferencia) as ingresos_transferencia'),
+            DB::raw('AVG(servicios_realizados.total_servicio) as promedio_por_servicio')
+        ])
             ->join('servicios', 'servicios_realizados.servicio_id', '=', 'servicios.id')
             ->whereBetween('servicios_realizados.fecha', [$startDate, $endDate])
             ->groupBy('servicios.id', 'servicios.nombre')
@@ -245,7 +246,7 @@ class AnalyticsService
 
         if (!empty($filters['entidad_id'])) {
             $query->join('operadores', 'servicios_realizados.empleado_id', '=', 'operadores.id')
-                  ->where('operadores.entidad_id', $filters['entidad_id']);
+                ->where('operadores.entidad_id', $filters['entidad_id']);
         }
 
         $data = $query->get();
@@ -274,23 +275,23 @@ class AnalyticsService
     private function getMetodosPagoAnalisis(Carbon $startDate, Carbon $endDate, array $filters): array
     {
         $query = ServiciosRealizados::select([
-                DB::raw('CASE 
+            DB::raw('CASE 
                     WHEN monto_efectivo > 0 AND monto_transferencia > 0 THEN "Mixto"
                     WHEN monto_efectivo > 0 THEN "Efectivo"
                     WHEN monto_transferencia > 0 THEN "Transferencia"
                     ELSE "No especificado"
                 END as metodo_pago'),
-                DB::raw('COUNT(*) as cantidad_transacciones'),
-                DB::raw('SUM(total_servicio) as monto_total'),
-                DB::raw('AVG(total_servicio) as promedio_por_transaccion')
-            ])
+            DB::raw('COUNT(*) as cantidad_transacciones'),
+            DB::raw('SUM(total_servicio) as monto_total'),
+            DB::raw('AVG(total_servicio) as promedio_por_transaccion')
+        ])
             ->whereBetween('fecha', [$startDate, $endDate])
             ->groupBy('metodo_pago')
             ->orderBy('monto_total', 'desc');
 
         if (!empty($filters['entidad_id'])) {
             $query->join('operadores', 'servicios_realizados.empleado_id', '=', 'operadores.id')
-                  ->where('operadores.entidad_id', $filters['entidad_id']);
+                ->where('operadores.entidad_id', $filters['entidad_id']);
         }
 
         $data = $query->get();
@@ -316,18 +317,18 @@ class AnalyticsService
     private function getTendenciasTemporales(Carbon $startDate, Carbon $endDate, array $filters): array
     {
         $query = ServiciosRealizados::select([
-                DB::raw('DATE(fecha) as fecha'),
-                DB::raw('COUNT(*) as servicios_realizados'),
-                DB::raw('SUM(total_servicio) as ingresos_diarios'),
-                DB::raw('AVG(total_servicio) as promedio_por_servicio')
-            ])
+            DB::raw('DATE(fecha) as fecha'),
+            DB::raw('COUNT(*) as servicios_realizados'),
+            DB::raw('SUM(total_servicio) as ingresos_diarios'),
+            DB::raw('AVG(total_servicio) as promedio_por_servicio')
+        ])
             ->whereBetween('fecha', [$startDate, $endDate])
             ->groupBy('fecha')
             ->orderBy('fecha');
 
         if (!empty($filters['entidad_id'])) {
             $query->join('operadores', 'servicios_realizados.empleado_id', '=', 'operadores.id')
-                  ->where('operadores.entidad_id', $filters['entidad_id']);
+                ->where('operadores.entidad_id', $filters['entidad_id']);
         }
 
         $data = $query->get();
@@ -354,12 +355,12 @@ class AnalyticsService
     private function getEntidadesRendimiento(Carbon $startDate, Carbon $endDate, array $filters): array
     {
         $query = ServiciosRealizados::select([
-                'entidades.nombre as entidad',
-                DB::raw('COUNT(*) as servicios_realizados'),
-                DB::raw('SUM(servicios_realizados.total_servicio) as ingresos_totales'),
-                DB::raw('COUNT(DISTINCT servicios_realizados.empleado_id) as operadores_activos'),
-                DB::raw('AVG(servicios_realizados.total_servicio) as promedio_por_servicio')
-            ])
+            'entidades.nombre as entidad',
+            DB::raw('COUNT(*) as servicios_realizados'),
+            DB::raw('SUM(servicios_realizados.total_servicio) as ingresos_totales'),
+            DB::raw('COUNT(DISTINCT servicios_realizados.empleado_id) as operadores_activos'),
+            DB::raw('AVG(servicios_realizados.total_servicio) as promedio_por_servicio')
+        ])
             ->join('operadores', 'servicios_realizados.empleado_id', '=', 'operadores.id')
             ->join('entidades', 'operadores.entidad_id', '=', 'entidades.id')
             ->whereBetween('servicios_realizados.fecha', [$startDate, $endDate])
@@ -391,10 +392,10 @@ class AnalyticsService
     private function getReporteCompletoGanancias(Carbon $startDate, Carbon $endDate, array $filters): array
     {
         // Obtener todos los operadores con sus servicios realizados del período específico
-        $operadoresQuery = Operadores::with(['serviciosRealizados' => function($query) use ($startDate, $endDate) {
+        $operadoresQuery = Operadores::with(['serviciosRealizados' => function ($query) use ($startDate, $endDate) {
             $query->whereDate('fecha', '>=', $startDate->toDateString())
-                  ->whereDate('fecha', '<=', $endDate->toDateString())
-                  ->with('servicio:id,nombre,precio,porcentaje_pago_empleado');
+                ->whereDate('fecha', '<=', $endDate->toDateString())
+                ->with('servicio:id,nombre,precio,porcentaje_pago_empleado');
         }]);
 
         // Aplicar filtro por entidad si se proporciona
@@ -413,12 +414,12 @@ class AnalyticsService
 
         foreach ($operadores as $operador) {
             // Calcular ingresos por servicios del operador en el período específico
-            $ingresosServicios = $operador->serviciosRealizados->sum(function($servicio) {
+            $ingresosServicios = $operador->serviciosRealizados->sum(function ($servicio) {
                 return $servicio->total_con_descuento ?? ($servicio->cantidad * ($servicio->servicio->precio ?? 0));
             });
 
             // Calcular pagos al operador por servicios en el período específico
-            $pagosServicios = $operador->serviciosRealizados->sum(function($servicio) {
+            $pagosServicios = $operador->serviciosRealizados->sum(function ($servicio) {
                 $precio = $servicio->servicio->precio ?? 0;
                 $porcentaje = $servicio->servicio->porcentaje_pago_empleado ?? 50;
                 return $servicio->cantidad * $precio * ($porcentaje / 100);
@@ -456,7 +457,7 @@ class AnalyticsService
         $ventasQuery = Ventas::whereDate('created_at', '>=', $startDate->toDateString())
             ->whereDate('created_at', '<=', $endDate->toDateString());
         if (!empty($filters['entidad_id'])) {
-            $ventasQuery->whereHas('empleado', function($q) use ($filters) {
+            $ventasQuery->whereHas('empleado', function ($q) use ($filters) {
                 $q->where('entidad_id', $filters['entidad_id']);
             });
         }
@@ -467,7 +468,7 @@ class AnalyticsService
             ->whereDate('fecha', '<=', $endDate->toDateString())
             ->where('tipo', '!=', 'servicio_ocasional');
         if (!empty($filters['entidad_id'])) {
-            $ingresosAdicionalesQuery->whereHas('empleado', function($q) use ($filters) {
+            $ingresosAdicionalesQuery->whereHas('empleado', function ($q) use ($filters) {
                 $q->where('entidad_id', $filters['entidad_id']);
             });
         }
@@ -534,7 +535,7 @@ class AnalyticsService
     public function exportReport(string $reportType, ?string $startDate = null, ?string $endDate = null, array $filters = [], string $format = 'excel'): array
     {
         $reportData = $this->generateReport($reportType, $startDate, $endDate, $filters);
-        
+
         if ($format === 'csv') {
             return $this->generateCsvData($reportData);
         } else {
@@ -545,34 +546,34 @@ class AnalyticsService
     private function generateCsvData(array $reportData): array
     {
         $csvContent = [];
-        
+
         // Título del reporte
         $csvContent[] = [$reportData['title']];
         $csvContent[] = ['Período: ' . $reportData['period']];
         $csvContent[] = []; // Línea vacía
-        
+
         // Encabezados
-        $headers = array_map(function($col) {
+        $headers = array_map(function ($col) {
             return $col['header'];
         }, $reportData['columns']);
         $csvContent[] = $headers;
-        
+
         // Datos
         foreach ($reportData['data'] as $row) {
             $csvRow = [];
             foreach ($reportData['columns'] as $column) {
                 $value = $row->{$column['key']};
-                
+
                 // Formatear valores numéricos
                 if (is_numeric($value) && str_contains($column['header'], '$')) {
                     $value = number_format($value, 2);
                 }
-                
+
                 $csvRow[] = $value;
             }
             $csvContent[] = $csvRow;
         }
-        
+
         return [
             'format' => 'csv',
             'filename' => $reportData['title'] . '_' . date('Y-m-d_H-i-s') . '.csv',
@@ -585,16 +586,16 @@ class AnalyticsService
     {
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-        
+
         // Título del reporte
         $sheet->setCellValue('A1', $reportData['title']);
         $sheet->mergeCells('A1:' . $this->getColumnLetter(count($reportData['columns'])) . '1');
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
-        
+
         // Período
         $sheet->setCellValue('A2', 'Período: ' . $reportData['period']);
         $sheet->mergeCells('A2:' . $this->getColumnLetter(count($reportData['columns'])) . '2');
-        
+
         // Encabezados
         $headerRow = 4;
         foreach ($reportData['columns'] as $index => $column) {
@@ -602,35 +603,35 @@ class AnalyticsService
             $sheet->setCellValue($colLetter . $headerRow, $column['header']);
             $sheet->getStyle($colLetter . $headerRow)->getFont()->setBold(true);
         }
-        
+
         // Datos
         $dataRow = $headerRow + 1;
         foreach ($reportData['data'] as $row) {
             foreach ($reportData['columns'] as $index => $column) {
                 $colLetter = $this->getColumnLetter($index + 1);
                 $value = $row->{$column['key']};
-                
+
                 // Formatear valores numéricos
                 if (is_numeric($value) && str_contains($column['header'], '$')) {
                     $value = number_format($value, 2);
                 }
-                
+
                 $sheet->setCellValue($colLetter . $dataRow, $value);
             }
             $dataRow++;
         }
-        
+
         // Autoajustar columnas
         foreach (range('A', $this->getColumnLetter(count($reportData['columns']))) as $column) {
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
-        
+
         // Generar archivo en memoria
         $writer = new Xlsx($spreadsheet);
         ob_start();
         $writer->save('php://output');
         $excelContent = ob_get_clean();
-        
+
         return [
             'format' => 'excel',
             'filename' => $reportData['title'] . '_' . date('Y-m-d_H-i-s') . '.xlsx',
@@ -638,7 +639,7 @@ class AnalyticsService
             'mime_type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         ];
     }
-    
+
     private function getColumnLetter(int $columnNumber): string
     {
         $letter = '';
@@ -649,4 +650,4 @@ class AnalyticsService
         }
         return $letter;
     }
-} 
+}
