@@ -2,6 +2,7 @@
 
 namespace App\Http\Modules\servicios\service;
 
+use App\Http\Modules\CajaMenor\Models\CajaMenor;
 use App\Http\Modules\servicios\models\Servicios;
 use App\Http\Modules\servicios\models\ServiciosRealizados;
 use App\Http\Modules\servicios\models\IngresosAdicionales;
@@ -9,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
-class ServiciosService 
+class ServiciosService
 {
     public function crearServicio(array $data)
     {
@@ -20,23 +21,23 @@ class ServiciosService
     {
         $query = Servicios::where('nombre', 'not like', 'Servicio Ocasional%')
             ->orderBy('id', 'asc');
-        
+
         // Si no es admin, filtrar por entidad
         if (!$isAdmin && $entidadId) {
             $query->where('entidad_id', $entidadId);
         }
-        
+
         return $query->get();
     }
 
     public function modificarServicio(array $data, int $id, $entidadId = null)
     {
         $query = Servicios::where('id', $id);
-        
+
         if ($entidadId) {
             $query->where('entidad_id', $entidadId);
         }
-        
+
         return $query->update($data);
     }
 
@@ -47,35 +48,35 @@ class ServiciosService
         $montoTransferencia = $data['monto_transferencia'] ?? 0;
         $totalServicio = $data['total_servicio'] ?? 0;
         $descuentoPorcentaje = $data['descuento_porcentaje'] ?? 0;
-        
+
         // Si no se proporciona total_servicio, calcularlo
         if ($totalServicio == 0) {
             $servicio = Servicios::find($data['servicio_id']);
             $totalServicio = $data['cantidad'] * ($servicio->precio ?? 0);
         }
-        
+
         // Calcular descuento y total con descuento
         $montoDescuento = $totalServicio * ($descuentoPorcentaje / 100);
         $totalConDescuento = $totalServicio - $montoDescuento;
-        
+
         // Validar que la suma de efectivo y transferencia sea igual al total con descuento
         // Usar tolerancia para problemas de precisión decimal
         $sumaMontos = $montoEfectivo + $montoTransferencia;
         if (abs($sumaMontos - $totalConDescuento) > 0.01) {
             throw new \Exception('La suma de efectivo y transferencia debe ser igual al total del servicio con descuento aplicado');
         }
-        
+
         // Agregar los campos calculados al array de datos
         $data['monto_descuento'] = $montoDescuento;
         $data['total_con_descuento'] = $totalConDescuento;
-        
+
         // Si la fecha viene solo como Y-m-d, agregar la hora actual
         if (isset($data['fecha']) && !str_contains($data['fecha'], ':')) {
             // Usar Carbon con zona horaria explícita para asegurar la hora correcta
             $horaActual = \Carbon\Carbon::now('America/Bogota')->format('H:i:s');
             $data['fecha'] = $data['fecha'] . ' ' . $horaActual;
         }
-        
+
         return ServiciosRealizados::create($data);
     }
 
@@ -83,7 +84,7 @@ class ServiciosService
     {
         $query = ServiciosRealizados::with(['empleado:id,nombre,apellido', 'servicio:id,nombre,precio'])
             ->orderBy('created_at', 'desc');
-        
+
         // Filtrar por entidad si se proporciona
         if ($entidadId) {
             $query->whereHas('servicio', function ($q) use ($entidadId) {
@@ -97,7 +98,7 @@ class ServiciosService
                 $q->where('nombre', 'like', "%{$search}%");
             })->orWhereHas('empleado', function ($q) use ($search) {
                 $q->where('nombre', 'like', "%{$search}%")
-                  ->orWhere('apellido', 'like', "%{$search}%");
+                    ->orWhere('apellido', 'like', "%{$search}%");
             });
         }
 
@@ -111,34 +112,34 @@ class ServiciosService
 
         // Aplicar paginación
         $servicios = $query->skip(($page - 1) * $perPage)
-                          ->take($perPage)
-                          ->get()
-                          ->map(function ($item) {
-                              return [
-                                  'id' => $item->id,
-                                  'empleado_id' => $item->empleado_id,
-                                  'servicio_id' => $item->servicio_id,
-                                  'cantidad' => $item->cantidad,
-                                  'fecha' => $item->fecha,
-                                  'metodo_pago' => $item->metodo_pago,
-                                  'monto_efectivo' => $item->monto_efectivo,
-                                  'monto_transferencia' => $item->monto_transferencia,
-                                  'total_servicio' => $item->total_servicio,
-                                  'descuento_porcentaje' => $item->descuento_porcentaje,
-                                  'monto_descuento' => $item->monto_descuento,
-                                  'total_con_descuento' => $item->total_con_descuento,
-                                  'empleado' => $item->empleado ? [
-                                      'id' => $item->empleado->id,
-                                      'nombre' => $item->empleado->nombre,
-                                      'apellido' => $item->empleado->apellido,
-                                  ] : null,
-                                  'servicio' => $item->servicio ? [
-                                      'id' => $item->servicio->id,
-                                      'nombre' => $item->servicio->nombre,
-                                      'precio' => $item->servicio->precio,
-                                  ] : null,
-                              ];
-                          });
+            ->take($perPage)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'empleado_id' => $item->empleado_id,
+                    'servicio_id' => $item->servicio_id,
+                    'cantidad' => $item->cantidad,
+                    'fecha' => $item->fecha,
+                    'metodo_pago' => $item->metodo_pago,
+                    'monto_efectivo' => $item->monto_efectivo,
+                    'monto_transferencia' => $item->monto_transferencia,
+                    'total_servicio' => $item->total_servicio,
+                    'descuento_porcentaje' => $item->descuento_porcentaje,
+                    'monto_descuento' => $item->monto_descuento,
+                    'total_con_descuento' => $item->total_con_descuento,
+                    'empleado' => $item->empleado ? [
+                        'id' => $item->empleado->id,
+                        'nombre' => $item->empleado->nombre,
+                        'apellido' => $item->empleado->apellido,
+                    ] : null,
+                    'servicio' => $item->servicio ? [
+                        'id' => $item->servicio->id,
+                        'nombre' => $item->servicio->nombre,
+                        'precio' => $item->servicio->precio,
+                    ] : null,
+                ];
+            });
 
         return [
             'data' => $servicios,
@@ -163,14 +164,14 @@ class ServiciosService
         $query = ServiciosRealizados::with('servicio', 'empleado')
             ->whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual);
-        
+
         // Filtrar por entidad si se proporciona
         if ($entidadId) {
             $query->whereHas('servicio', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         $servicios = $query->get();
 
         // Agrupa y suma por empleado
@@ -204,20 +205,20 @@ class ServiciosService
         $query = ServiciosRealizados::with('servicio', 'empleado')
             ->whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual);
-        
+
         // Filtrar por entidad si se proporciona
         if ($entidadId) {
             $query->whereHas('servicio', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         $servicios = $query->get();
 
         // Agrupa y suma por empleado con detalles completos
         $pagos = $servicios->groupBy('empleado_id')->map(function ($items, $empleado_id) {
             $empleado = $items->first()->empleado;
-            
+
             // Calcular total bruto (precio original sin descuento) y total a pagar
             $totalBruto = $items->reduce(function ($carry, $item) {
                 return $carry + ($item->cantidad * ($item->servicio->precio ?? 0));
@@ -276,14 +277,14 @@ class ServiciosService
         $query = ServiciosRealizados::with('servicio')
             ->whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual);
-        
+
         // Filtrar por entidad si se proporciona
         if ($entidadId) {
             $query->whereHas('servicio', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         $servicios = $query->get();
 
         // Suma el total con descuento (lo que realmente se cobró)
@@ -295,14 +296,14 @@ class ServiciosService
         $queryIngresos = IngresosAdicionales::whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual)
             ->where('tipo', '!=', 'servicio_ocasional');
-        
+
         // Filtrar ingresos adicionales por entidad si se proporciona
         if ($entidadId) {
             $queryIngresos->whereHas('operador', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         $ingresosAdicionales = $queryIngresos->get();
 
         // Suma el total de ingresos adicionales (excluyendo servicios ocasionales)
@@ -311,14 +312,14 @@ class ServiciosService
         // Trae las ventas de productos del mes y año actual
         $queryVentas = \App\Http\Modules\Ventas\Models\Ventas::whereYear('created_at', $anioActual)
             ->whereMonth('created_at', $mesActual);
-        
+
         // Filtrar ventas por entidad si se proporciona
         if ($entidadId) {
             $queryVentas->whereHas('empleado', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         $ventas = $queryVentas->get();
 
         // Suma el total de ventas (se registra por el costo unitario)
@@ -340,14 +341,14 @@ class ServiciosService
         $query = ServiciosRealizados::with('servicio')
             ->whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual);
-        
+
         // Filtrar por entidad si se proporciona
         if ($entidadId) {
             $query->whereHas('servicio', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         $servicios = $query->get();
 
         // Calcular ingresos totales de servicios (con descuento aplicado)
@@ -359,14 +360,14 @@ class ServiciosService
         $queryIngresos = IngresosAdicionales::whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual)
             ->where('tipo', '!=', 'servicio_ocasional');
-        
+
         // Filtrar ingresos adicionales por entidad si se proporciona
         if ($entidadId) {
             $queryIngresos->whereHas('operador', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         $ingresosAdicionales = $queryIngresos->get();
 
         // Suma el total de ingresos adicionales (excluyendo servicios ocasionales)
@@ -375,14 +376,14 @@ class ServiciosService
         // Trae las ventas de productos del mes y año actual
         $queryVentas = \App\Http\Modules\Ventas\Models\Ventas::whereYear('created_at', $anioActual)
             ->whereMonth('created_at', $mesActual);
-        
+
         // Filtrar ventas por entidad si se proporciona
         if ($entidadId) {
             $queryVentas->whereHas('empleado', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         $ventas = $queryVentas->get();
 
         // Suma el total de ventas (se registra por el costo unitario)
@@ -433,14 +434,14 @@ class ServiciosService
         $query = ServiciosRealizados::with('servicio')
             ->whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual);
-        
+
         // Filtrar por entidad si se proporciona
         if ($entidadId) {
             $query->whereHas('servicio', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         $servicios = $query->get();
 
 
@@ -449,27 +450,27 @@ class ServiciosService
         $queryIngresos = IngresosAdicionales::whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual)
             ->where('tipo', '!=', 'servicio_ocasional');
-        
+
         // Filtrar ingresos adicionales por entidad si se proporciona
         if ($entidadId) {
             $queryIngresos->whereHas('operador', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         $ingresosAdicionales = $queryIngresos->get();
 
         // Trae las ventas de productos del mes y año actual
         $queryVentas = \App\Http\Modules\Ventas\Models\Ventas::whereYear('created_at', $anioActual)
             ->whereMonth('created_at', $mesActual);
-        
+
         // Filtrar ventas por entidad si se proporciona
         if ($entidadId) {
             $queryVentas->whereHas('empleado', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         $ventas = $queryVentas->get();
 
         // Calcular totales por método de pago (servicios + ingresos adicionales + ventas)
@@ -479,7 +480,7 @@ class ServiciosService
         $ingresosAdicionalesTransferencia = $ingresosAdicionales->sum('monto_transferencia');
         $ventasEfectivo = $ventas->sum('monto_efectivo');
         $ventasTransferencia = $ventas->sum('monto_transferencia');
-        
+
         $totalEfectivo = $serviciosEfectivo + $ingresosAdicionalesEfectivo + $ventasEfectivo;
         $totalTransferencia = $serviciosTransferencia + $ingresosAdicionalesTransferencia + $ventasTransferencia;
         $totalGeneral = $totalEfectivo + $totalTransferencia;
@@ -492,7 +493,7 @@ class ServiciosService
             $precio = $item->servicio->precio ?? 0;
             $porcentaje = $item->servicio->porcentaje_pago_empleado ?? 50;
             $ingresoEmpleado = $item->cantidad * $precio * ($porcentaje / 100);
-            
+
             // La ganancia se calcula sobre lo que realmente se cobró (efectivo)
             return $carry + ($item->monto_efectivo - $ingresoEmpleado);
         }, 0);
@@ -502,7 +503,7 @@ class ServiciosService
             $precio = $item->servicio->precio ?? 0;
             $porcentaje = $item->servicio->porcentaje_pago_empleado ?? 50;
             $ingresoEmpleado = $item->cantidad * $precio * ($porcentaje / 100);
-            
+
             // La ganancia se calcula sobre lo que realmente se cobró (transferencia)
             return $carry + ($item->monto_transferencia - $ingresoEmpleado);
         }, 0);
@@ -542,28 +543,28 @@ class ServiciosService
         $query = ServiciosRealizados::with('servicio')
             ->whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual);
-        
+
         // Filtrar por entidad si se proporciona
         if ($entidadId) {
             $query->whereHas('servicio', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         $servicios = $query->get();
 
         // Trae los ingresos adicionales del mes y año actual (excluyendo servicios ocasionales)
         $queryIngresos = IngresosAdicionales::whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual)
             ->where('tipo', '!=', 'servicio_ocasional');
-        
+
         // Filtrar ingresos adicionales por entidad si se proporciona
         if ($entidadId) {
             $queryIngresos->whereHas('operador', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         $ingresosAdicionales = $queryIngresos->get();
 
         // Trae las ventas de productos del mes y año actual
@@ -588,12 +589,12 @@ class ServiciosService
     public function crearIngresoAdicional(array $data)
     {
         // Validar que los montos sumen el total
-        
+
         // Validar que los montos sumen el total
         $montoEfectivo = $data['monto_efectivo'] ?? 0;
         $montoTransferencia = $data['monto_transferencia'] ?? 0;
         $montoTotal = $data['monto'] ?? 0;
-        
+
         // Validar que la suma de efectivo y transferencia sea igual al monto total
         $sumaMontos = $montoEfectivo + $montoTransferencia;
         if (abs($sumaMontos - $montoTotal) > 0.01) {
@@ -632,7 +633,7 @@ class ServiciosService
             // Agregar el ID del servicio realizado al ingreso adicional
             $data['servicio_realizado_id'] = $servicioRealizado->id;
         }
-        
+
         return IngresosAdicionales::create($data);
     }
 
@@ -644,14 +645,14 @@ class ServiciosService
             'servicioRealizado.servicio:id,nombre,precio'
         ])
             ->orderBy('created_at', 'desc');
-        
+
         // Filtrar por entidad si se proporciona
         if ($entidadId) {
             $query->whereHas('operador', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         return $query->get()
             ->map(function ($item) {
                 return [
@@ -699,14 +700,14 @@ class ServiciosService
         // Trae los ingresos adicionales del mes y año actual
         $query = IngresosAdicionales::whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual);
-        
+
         // Filtrar por entidad si se proporciona
         if ($entidadId) {
             $query->whereHas('operador', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         $ingresos = $query->get();
 
         // Calcular totales por método de pago
@@ -743,28 +744,28 @@ class ServiciosService
         $query = ServiciosRealizados::with('servicio')
             ->whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual);
-        
+
         // Filtrar por entidad si se proporciona
         if ($entidadId) {
             $query->whereHas('servicio', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         $servicios = $query->get();
 
         // Trae los ingresos adicionales del mes y año actual (excluyendo servicios ocasionales)
         $queryIngresos = IngresosAdicionales::whereYear('fecha', $anioActual)
             ->whereMonth('fecha', $mesActual)
             ->where('tipo', '!=', 'servicio_ocasional');
-        
+
         // Filtrar ingresos adicionales por entidad si se proporciona
         if ($entidadId) {
             $queryIngresos->whereHas('operador', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         $ingresosAdicionales = $queryIngresos->get();
 
         // Calcular ingresos de servicios
@@ -842,7 +843,7 @@ class ServiciosService
     public function eliminarServicioRealizado(int $id)
     {
         $servicioRealizado = ServiciosRealizados::find($id);
-        
+
         if (!$servicioRealizado) {
             throw new \Exception('Servicio realizado no encontrado');
         }
@@ -864,7 +865,7 @@ class ServiciosService
     public function eliminarServicio(int $id)
     {
         $servicio = Servicios::find($id);
-        
+
         if (!$servicio) {
             throw new \Exception('Servicio no encontrado');
         }
@@ -894,38 +895,38 @@ class ServiciosService
         // Trae los servicios realizados de la fecha específica
         $query = ServiciosRealizados::with('servicio', 'empleado')
             ->whereDate('fecha', $fecha);
-        
+
         // Filtrar por entidad si se proporciona
         if ($entidadId) {
             $query->whereHas('servicio', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         $servicios = $query->get();
 
         // Trae los ingresos adicionales de la fecha específica
         $queryIngresos = IngresosAdicionales::whereDate('fecha', $fecha);
-        
+
         // Filtrar ingresos adicionales por entidad si se proporciona
         if ($entidadId) {
             $queryIngresos->whereHas('operador', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         $ingresosAdicionales = $queryIngresos->get();
 
         // Trae las ventas de productos de la fecha específica
         $queryVentas = \App\Http\Modules\Ventas\Models\Ventas::whereDate('created_at', $fecha);
-        
+
         // Filtrar ventas por entidad si se proporciona
         if ($entidadId) {
             $queryVentas->whereHas('empleado', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         $ventas = $queryVentas->get();
 
         // Calcular ingresos de servicios
@@ -992,12 +993,12 @@ class ServiciosService
         // Detalles de servicios por empleado
         $serviciosPorEmpleado = $servicios->groupBy('empleado_id')->map(function ($items, $empleadoId) {
             $empleado = $items->first()->empleado;
-            
+
             // Calcular total bruto (precio original sin descuento)
             $totalBruto = $items->reduce(function ($carry, $item) {
                 return $carry + ($item->cantidad * ($item->servicio->precio ?? 0));
             }, 0);
-            
+
             // Calcular total a pagar al empleado
             $totalEmpleado = $items->reduce(function ($carry, $item) {
                 $precio = $item->servicio->precio ?? 0;
@@ -1080,65 +1081,65 @@ class ServiciosService
         // Trae los servicios realizados en el rango de fechas
         $queryServicios = ServiciosRealizados::with('servicio')
             ->whereBetween('fecha', [$fechaInicio, $fechaFin]);
-        
+
         // Filtrar servicios por entidad si se proporciona
         if ($entidadId) {
             $queryServicios->whereHas('servicio', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         $servicios = $queryServicios->get();
 
         // Trae los ingresos adicionales en el rango de fechas (excluyendo servicios ocasionales)
         $queryIngresos = IngresosAdicionales::whereBetween('fecha', [$fechaInicio, $fechaFin])
             ->where('tipo', '!=', 'servicio_ocasional');
-        
+
         // Filtrar ingresos adicionales por entidad si se proporciona
         if ($entidadId) {
             $queryIngresos->whereHas('operador', function ($q) use ($entidadId) {
                 $q->where('entidad_id', $entidadId);
             });
         }
-        
+
         $ingresosAdicionales = $queryIngresos->get();
 
         // Agrupar por día
         $gananciasPorDia = collect();
-        
+
         // Generar array de fechas en el rango
         $fechaActual = \Carbon\Carbon::parse($fechaInicio);
         $fechaFinCarbon = \Carbon\Carbon::parse($fechaFin);
-        
+
         while ($fechaActual->lte($fechaFinCarbon)) {
             $fechaStr = $fechaActual->format('Y-m-d');
-            
+
             // Servicios de este día
             $serviciosDia = $servicios->filter(function ($item) use ($fechaStr) {
                 return $item->fecha === $fechaStr;
             });
-            
+
             // Ingresos adicionales de este día
             $ingresosDia = $ingresosAdicionales->filter(function ($item) use ($fechaStr) {
                 return $item->fecha === $fechaStr;
             });
-            
+
             // Calcular totales del día
             $ingresosServiciosDia = $serviciosDia->reduce(function ($carry, $item) {
                 return $carry + ($item->total_con_descuento ?? ($item->cantidad * ($item->servicio->precio ?? 0)));
             }, 0);
-            
+
             $ingresosAdicionalesDia = $ingresosDia->sum('monto');
             $ingresosTotalesDia = $ingresosServiciosDia + $ingresosAdicionalesDia;
-            
+
             $totalPagarEmpleadosDia = $serviciosDia->reduce(function ($carry, $item) {
                 $precio = $item->servicio->precio ?? 0;
                 $porcentaje = $item->servicio->porcentaje_pago_empleado ?? 50;
                 return $carry + ($item->cantidad * $precio * ($porcentaje / 100));
             }, 0);
-            
+
             $gananciaNetaDia = $ingresosTotalesDia - $totalPagarEmpleadosDia;
-            
+
             $gananciasPorDia->push([
                 'fecha' => $fechaStr,
                 'ingresos_totales' => $ingresosTotalesDia,
@@ -1149,16 +1150,16 @@ class ServiciosService
                 'cantidad_servicios' => $serviciosDia->count(),
                 'cantidad_ingresos_adicionales' => $ingresosDia->count()
             ]);
-            
+
             $fechaActual->addDay();
         }
-        
+
         // Calcular totales del rango
         $ingresosTotalesRango = $gananciasPorDia->sum('ingresos_totales');
         $gananciaNetaRango = $gananciasPorDia->sum('ganancia_neta');
         $totalServiciosRango = $gananciasPorDia->sum('cantidad_servicios');
         $totalIngresosAdicionalesRango = $gananciasPorDia->sum('cantidad_ingresos_adicionales');
-        
+
         return [
             'fecha_inicio' => $fechaInicio,
             'fecha_fin' => $fechaFin,
@@ -1176,58 +1177,58 @@ class ServiciosService
     public function eliminarIngresoAdicional(int $id)
     {
         $ingreso = IngresosAdicionales::find($id);
-        
+
         if (!$ingreso) {
             throw new \Exception('El ingreso adicional no existe');
         }
-        
+
         // Si es un servicio ocasional, eliminar también el servicio realizado y el servicio
         if ($ingreso->tipo === 'servicio_ocasional' && $ingreso->servicio_realizado_id) {
             $servicioRealizado = ServiciosRealizados::find($ingreso->servicio_realizado_id);
             if ($servicioRealizado) {
                 // Eliminar el servicio realizado
                 $servicioRealizado->delete();
-                
+
                 // Eliminar el servicio ocasional
                 if ($servicioRealizado->servicio) {
                     $servicioRealizado->servicio->delete();
                 }
             }
         }
-        
+
         $ingreso->delete();
-        
+
         return [
             'message' => 'Ingreso adicional eliminado exitosamente',
             'id' => $id
         ];
     }
 
-    public function serviciosMultiples(array $data)
+    public function serviciosMultiples(array $data, $entidadId = null)
     {
         // Validar que los montos sumen el total de todos los servicios
         $montoEfectivo = $data['monto_efectivo'] ?? 0;
         $montoTransferencia = $data['monto_transferencia'] ?? 0;
         $servicios = $data['servicios'] ?? [];
-        
+
         // Calcular el total de todos los servicios
         $totalServicios = 0;
         $serviciosConCalculos = [];
-        
+
         foreach ($servicios as $servicio) {
             $servicioModel = Servicios::find($servicio['servicio_id']);
             if (!$servicioModel) {
                 throw new \Exception("El servicio con ID {$servicio['servicio_id']} no existe");
             }
-            
+
             $precio = $servicioModel->precio ?? 0;
             $cantidad = $servicio['cantidad'] ?? 0;
             $descuentoPorcentaje = $servicio['descuento_porcentaje'] ?? 0;
-            
+
             $totalServicio = $precio * $cantidad;
             $montoDescuento = $totalServicio * ($descuentoPorcentaje / 100);
             $totalConDescuento = $totalServicio - $montoDescuento;
-            
+
             $serviciosConCalculos[] = [
                 'servicio_id' => $servicio['servicio_id'],
                 'cantidad' => $cantidad,
@@ -1236,33 +1237,33 @@ class ServiciosService
                 'monto_descuento' => $montoDescuento,
                 'total_con_descuento' => $totalConDescuento
             ];
-            
+
             $totalServicios += $totalConDescuento;
         }
-        
+
         // Validar que la suma de efectivo y transferencia sea igual al total de todos los servicios
         $sumaMontos = $montoEfectivo + $montoTransferencia;
         if (abs($sumaMontos - $totalServicios) > 0.01) {
             throw new \Exception('La suma de efectivo y transferencia debe ser igual al total de todos los servicios con descuentos aplicados');
         }
-        
+
         // Usar transacción para asegurar que todos los servicios se creen o ninguno
-        return DB::transaction(function () use ($data, $serviciosConCalculos, $montoEfectivo, $montoTransferencia, $totalServicios) {
+        return DB::transaction(function () use ($data, $serviciosConCalculos, $montoEfectivo, $montoTransferencia, $totalServicios, $entidadId) {
             $serviciosCreados = [];
             $montoEfectivoRestante = $montoEfectivo;
             $montoTransferenciaRestante = $montoTransferencia;
-            
+
             foreach ($serviciosConCalculos as $index => $servicioCalculado) {
                 // Determinar el método de pago para este servicio específico
                 $metodoPagoServicio = $data['metodo_pago'];
-                
+
                 // Calcular la proporción de este servicio respecto al total
                 $proporcion = $totalServicios > 0 ? $servicioCalculado['total_con_descuento'] / $totalServicios : 0;
-                
+
                 // Distribuir los montos proporcionalmente
                 $montoEfectivoServicio = round($montoEfectivo * $proporcion, 2);
                 $montoTransferenciaServicio = round($montoTransferencia * $proporcion, 2);
-                
+
                 // Para el último servicio, usar los montos restantes para evitar errores de redondeo
                 if ($index === count($serviciosConCalculos) - 1) {
                     $montoEfectivoServicio = $montoEfectivoRestante;
@@ -1272,7 +1273,7 @@ class ServiciosService
                     $montoEfectivoRestante -= $montoEfectivoServicio;
                     $montoTransferenciaRestante -= $montoTransferenciaServicio;
                 }
-                
+
                 // Determinar el método de pago real basado en los montos asignados
                 if ($montoEfectivoServicio > 0 && $montoTransferenciaServicio > 0) {
                     $metodoPagoServicio = 'mixto';
@@ -1281,7 +1282,35 @@ class ServiciosService
                 } elseif ($montoTransferenciaServicio > 0) {
                     $metodoPagoServicio = 'transferencia';
                 }
-                
+
+                // TODO: Aplicar descuento fijo de 1000 si la entidad es 6
+                if ($entidadId == 6) {
+                    $descuentoFijo = 1000;
+
+                    // Reducir el monto del servicio en 1000
+                    $servicioCalculado['total_con_descuento'] -= $descuentoFijo;
+
+                    // Guardar el descuento fijo en caja menor
+                    $cajaMenorData = [
+                        'operador_id' => $data['empleado_id'],
+                        'servicio_id' => $servicioCalculado['servicio_id'],
+                        'entidad_id' => $entidadId,
+                        'fecha' => $data['fecha'],
+                        'monto' => $descuentoFijo,
+                        'metodo_pago' => $metodoPagoServicio,
+                        'monto_efectivo' => min($descuentoFijo, $montoEfectivoServicio),
+                        'monto_transferencia' => $descuentoFijo > $montoEfectivoServicio
+                            ? $descuentoFijo - $montoEfectivoServicio
+                            : 0
+                    ];
+
+                    // Ajustar los montos que van a servicio (descontando lo que fue a caja menor)
+                    $montoEfectivoServicio -= $cajaMenorData['monto_efectivo'];
+                    $montoTransferenciaServicio -= $cajaMenorData['monto_transferencia'];
+
+                    CajaMenor::create($cajaMenorData);
+                }
+
                 $servicioData = [
                     'empleado_id' => $data['empleado_id'],
                     'servicio_id' => $servicioCalculado['servicio_id'],
@@ -1295,17 +1324,17 @@ class ServiciosService
                     'monto_descuento' => $servicioCalculado['monto_descuento'],
                     'total_con_descuento' => $servicioCalculado['total_con_descuento']
                 ];
-                
+
                 // Si la fecha viene solo como Y-m-d, agregar la hora actual
                 if (isset($servicioData['fecha']) && !str_contains($servicioData['fecha'], ':')) {
                     // Usar Carbon con zona horaria explícita para asegurar la hora correcta
                     $horaActual = \Carbon\Carbon::now('America/Bogota')->format('H:i:s');
                     $servicioData['fecha'] = $servicioData['fecha'] . ' ' . $horaActual;
                 }
-                
+
                 $serviciosCreados[] = ServiciosRealizados::create($servicioData);
             }
-            
+
             return [
                 'message' => 'Servicios creados exitosamente',
                 'servicios_creados' => count($serviciosCreados),

@@ -78,7 +78,8 @@ class ServiciosController extends Controller
     public function serviciosMultiples(crearServiciosMultiplesRequest $request)
     {
         try {
-            $resultado = $this->serviciosService->serviciosMultiples($request->validated());
+            $entidadId = auth()->user()->obtenerEntidadId();
+            $resultado = $this->serviciosService->serviciosMultiples($request->validated(), $entidadId);
             return response()->json($resultado, 201);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);
