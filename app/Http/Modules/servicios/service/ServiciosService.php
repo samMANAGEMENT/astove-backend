@@ -395,11 +395,11 @@ class ServiciosService
         // Ingresos totales (servicios + ingresos adicionales + ventas de productos)
         $ingresosTotales = $ingresosServicios + $totalIngresosAdicionales + $totalVentas;
 
-        // Calcular total a pagar a empleados (solo de servicios, no de ingresos adicionales)
+        // Calcular total a pagar a empleados (usando total_con_descuento)
         $totalPagarEmpleados = $servicios->reduce(function ($carry, $item) {
-            $precio = $item->servicio->precio ?? 0;
+            $totalConDescuento = $item->total_con_descuento ?? ($item->cantidad * ($item->servicio->precio ?? 0));
             $porcentaje = $item->servicio->porcentaje_pago_empleado ?? 50;
-            return $carry + ($item->cantidad * $precio * ($porcentaje / 100));
+            return $carry + ($totalConDescuento * ($porcentaje / 100));
         }, 0);
 
         // Calcular ganancia neta (servicios - pagos a empleados) + ingresos adicionales + ganancia ventas
@@ -781,9 +781,9 @@ class ServiciosService
 
         // Calcular pagos a empleados (solo de servicios)
         $totalPagarEmpleados = $servicios->reduce(function ($carry, $item) {
-            $precio = $item->servicio->precio ?? 0;
+            $totalConDescuento = $item->total_con_descuento ?? ($item->cantidad * ($item->servicio->precio ?? 0));
             $porcentaje = $item->servicio->porcentaje_pago_empleado ?? 50;
-            return $carry + ($item->cantidad * $precio * ($porcentaje / 100));
+            return $carry + ($totalConDescuento * ($porcentaje / 100));
         }, 0);
 
         // Ganancia neta
@@ -935,11 +935,8 @@ class ServiciosService
         }, 0);
 
         // Filtrar ingresos adicionales para evitar doble conteo con servicios ocasionales
-        // Si un servicio ocasional ya está en servicios_realizados, no lo contamos en ingresos_adicionales
         $ingresosAdicionalesFiltrados = $ingresosAdicionales->filter(function ($ingreso) use ($servicios) {
-            // Si es un servicio ocasional, verificar si ya está en servicios_realizados
             if ($ingreso->tipo === 'servicio_ocasional' && $ingreso->servicio_realizado_id) {
-                // Si tiene servicio_realizado_id, ya está contado en servicios_realizados
                 return false;
             }
             return true;
@@ -957,20 +954,17 @@ class ServiciosService
         // Ingresos totales del día
         $ingresosTotales = $ingresosServicios + $ingresosAdicionalesTotal + $ingresosVentas;
 
-        // Calcular pagos a empleados (solo de servicios)
+        // Calcular pagos a empleados (solo de servicios, usando total_con_descuento)
         $totalPagarEmpleados = $servicios->reduce(function ($carry, $item) {
-            $precio = $item->servicio->precio ?? 0;
+            $totalConDescuento = $item->total_con_descuento ?? ($item->cantidad * ($item->servicio->precio ?? 0));
             $porcentaje = $item->servicio->porcentaje_pago_empleado ?? 50;
-            return $carry + ($item->cantidad * $precio * ($porcentaje / 100));
+            return $carry + ($totalConDescuento * ($porcentaje / 100));
         }, 0);
 
         // Calcular ganancia de ventas de productos (100% ganancia ya que no hay porcentaje de empleado)
         $gananciaVentas = $ventas->sum('ganancia_total');
 
         // Ganancia neta del día (servicios + ingresos adicionales + ventas de productos)
-        // Servicios: ingresos - pagos a empleados
-        // Ingresos adicionales: 100% ganancia (no hay porcentaje de empleado)
-        // Ventas de productos: 100% ganancia (no hay porcentaje de empleado)
         $gananciaNeta = ($ingresosServicios - $totalPagarEmpleados) + $ingresosAdicionalesTotal + $gananciaVentas;
 
         // Métodos de pago
@@ -987,10 +981,10 @@ class ServiciosService
 
         // Desglose por tipo de ingreso adicional
         $accesorios = $ingresosAdicionalesFiltrados->where('tipo', 'accesorio')->sum('monto');
-        $serviciosOcasionales = $serviciosOcasionalesCount; // Usar la cantidad total de servicios ocasionales
+        $serviciosOcasionales = $serviciosOcasionalesCount;
         $otros = $ingresosAdicionalesFiltrados->where('tipo', 'otro')->sum('monto');
 
-        // Detalles de servicios por empleado
+        // Detalles de servicios por empleado (usando total_con_descuento)
         $serviciosPorEmpleado = $servicios->groupBy('empleado_id')->map(function ($items, $empleadoId) {
             $empleado = $items->first()->empleado;
 
@@ -999,11 +993,11 @@ class ServiciosService
                 return $carry + ($item->cantidad * ($item->servicio->precio ?? 0));
             }, 0);
 
-            // Calcular total a pagar al empleado
+            // Calcular total a pagar al empleado (usando total_con_descuento)
             $totalEmpleado = $items->reduce(function ($carry, $item) {
-                $precio = $item->servicio->precio ?? 0;
+                $totalConDescuento = $item->total_con_descuento ?? ($item->cantidad * ($item->servicio->precio ?? 0));
                 $porcentaje = $item->servicio->porcentaje_pago_empleado ?? 50;
-                return $carry + ($item->cantidad * $precio * ($porcentaje / 100));
+                return $carry + ($totalConDescuento * ($porcentaje / 100));
             }, 0);
 
             return [
@@ -1014,13 +1008,15 @@ class ServiciosService
                 'total_bruto' => $totalBruto,
                 'total_pagar' => $totalEmpleado,
                 'servicios' => $items->map(function ($item) {
+                    $totalConDescuento = $item->total_con_descuento ?? ($item->cantidad * ($item->servicio->precio ?? 0));
                     return [
                         'servicio_nombre' => $item->servicio->nombre ?? 'N/A',
                         'cantidad' => $item->cantidad,
                         'precio_unitario' => $item->servicio->precio ?? 0,
                         'porcentaje_empleado' => $item->servicio->porcentaje_pago_empleado ?? 50,
                         'total_bruto_servicio' => $item->cantidad * ($item->servicio->precio ?? 0),
-                        'total_servicio' => $item->total_con_descuento ?? ($item->cantidad * ($item->servicio->precio ?? 0)),
+                        'total_servicio' => $totalConDescuento,
+                        'monto_empleado' => $totalConDescuento * (($item->servicio->porcentaje_pago_empleado ?? 50) / 100),
                         'metodo_pago' => $item->metodo_pago
                     ];
                 })
@@ -1133,9 +1129,9 @@ class ServiciosService
             $ingresosTotalesDia = $ingresosServiciosDia + $ingresosAdicionalesDia;
 
             $totalPagarEmpleadosDia = $serviciosDia->reduce(function ($carry, $item) {
-                $precio = $item->servicio->precio ?? 0;
+                $totalConDescuento = $item->total_con_descuento ?? ($item->cantidad * ($item->servicio->precio ?? 0));
                 $porcentaje = $item->servicio->porcentaje_pago_empleado ?? 50;
-                return $carry + ($item->cantidad * $precio * ($porcentaje / 100));
+                return $carry + ($totalConDescuento * ($porcentaje / 100));
             }, 0);
 
             $gananciaNetaDia = $ingresosTotalesDia - $totalPagarEmpleadosDia;
