@@ -108,6 +108,12 @@ class RolesAndPermissionsSeeder extends Seeder
             ['nombre' => 'crear_inventario', 'descripcion' => 'Crear inventario', 'modulo' => 'inventario'],
             ['nombre' => 'editar_inventario', 'descripcion' => 'Editar inventario', 'modulo' => 'inventario'],
             ['nombre' => 'eliminar_inventario', 'descripcion' => 'Eliminar inventario', 'modulo' => 'inventario'],
+            
+            // Lista de Espera
+            ['nombre' => 'ver_lista_espera', 'descripcion' => 'Ver lista de espera', 'modulo' => 'lista_espera'],
+            ['nombre' => 'crear_lista_espera', 'descripcion' => 'Crear persona en lista de espera', 'modulo' => 'lista_espera'],
+            ['nombre' => 'editar_lista_espera', 'descripcion' => 'Editar persona en lista de espera', 'modulo' => 'lista_espera'],
+            ['nombre' => 'eliminar_lista_espera', 'descripcion' => 'Eliminar persona de lista de espera', 'modulo' => 'lista_espera'],
         ];
 
         foreach ($permisos as $permiso) {
@@ -141,7 +147,8 @@ class RolesAndPermissionsSeeder extends Seeder
                     'ver_inventario', 'crear_inventario', 'editar_inventario', 'eliminar_inventario',
                     'ver_agendas', 'crear_agendas', 'editar_agendas', 'eliminar_agendas',
                     'ver_horarios', 'crear_horarios', 'editar_horarios', 'eliminar_horarios',
-                    'ver_citas', 'crear_citas', 'editar_citas', 'eliminar_citas'
+                    'ver_citas', 'crear_citas', 'editar_citas', 'eliminar_citas',
+                    'ver_lista_espera', 'crear_lista_espera', 'editar_lista_espera', 'eliminar_lista_espera'
                 ]
             ],
             [
@@ -155,7 +162,8 @@ class RolesAndPermissionsSeeder extends Seeder
                     'ver_ingresos_adicionales',
                     'ver_agendas',
                     'ver_horarios',
-                    'ver_citas'
+                    'ver_citas',
+                    'ver_lista_espera'
                 ]
             ]
         ];
