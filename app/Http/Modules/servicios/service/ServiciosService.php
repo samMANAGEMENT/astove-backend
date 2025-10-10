@@ -586,10 +586,8 @@ class ServiciosService
     }
 
     // Métodos para Ingresos Adicionales
-    public function crearIngresoAdicional(array $data)
+    public function crearIngresoAdicional(array $data, $entidadId = null)
     {
-        // Validar que los montos sumen el total
-
         // Validar que los montos sumen el total
         $montoEfectivo = $data['monto_efectivo'] ?? 0;
         $montoTransferencia = $data['monto_transferencia'] ?? 0;
@@ -612,7 +610,8 @@ class ServiciosService
                 'precio' => $montoTotal,
                 'porcentaje_pago_empleado' => 40, // 40% para el operador
                 'descripcion' => 'Servicio ocasional registrado desde ingresos adicionales: ' . $data['concepto'],
-                'estado' => true
+                'estado' => true,
+                'entidad_id' => $entidadId
             ]);
 
             // Crear el servicio realizado
