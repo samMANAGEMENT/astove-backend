@@ -178,7 +178,8 @@ class ServiciosController extends Controller
     public function crearIngresoAdicional(crearIngresoAdicionalRequest $request)
     {
         try {
-            $ingreso = $this->serviciosService->crearIngresoAdicional($request->validated());
+            $entidadId = auth()->user()->obtenerEntidadId();
+            $ingreso = $this->serviciosService->crearIngresoAdicional($request->validated(), $entidadId);
             return response()->json($ingreso, 201);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);
