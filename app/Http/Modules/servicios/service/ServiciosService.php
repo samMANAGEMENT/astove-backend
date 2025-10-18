@@ -80,7 +80,7 @@ class ServiciosService
         return ServiciosRealizados::create($data);
     }
 
-    public function listarServiciosRealizados($page = 1, $perPage = 10, $search = '', $empleadoId = null, $entidadId = null)
+    public function listarServiciosRealizados($page = 1, $perPage = 10, $search = '', $empleadoId = null, $entidadId = null, $fechaDesde = null, $fechaHasta = null, $metodoPago = null, $precioMinimo = null, $precioMaximo = null)
     {
         $query = ServiciosRealizados::with(['empleado:id,nombre,apellido', 'servicio:id,nombre,precio'])
             ->orderBy('created_at', 'desc');
@@ -105,6 +105,27 @@ class ServiciosService
         // Aplicar filtro por empleado si se proporciona
         if ($empleadoId) {
             $query->where('empleado_id', $empleadoId);
+        }
+
+        // Aplicar filtro por rango de fechas
+        if ($fechaDesde) {
+            $query->whereDate('fecha', '>=', $fechaDesde);
+        }
+        if ($fechaHasta) {
+            $query->whereDate('fecha', '<=', $fechaHasta);
+        }
+
+        // Aplicar filtro por método de pago
+        if ($metodoPago) {
+            $query->where('metodo_pago', $metodoPago);
+        }
+
+        // Aplicar filtro por rango de precios
+        if ($precioMinimo !== null) {
+            $query->where('total_con_descuento', '>=', $precioMinimo);
+        }
+        if ($precioMaximo !== null) {
+            $query->where('total_con_descuento', '<=', $precioMaximo);
         }
 
         // Obtener el total de registros para la paginación
