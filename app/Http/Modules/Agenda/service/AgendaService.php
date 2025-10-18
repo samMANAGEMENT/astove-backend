@@ -76,6 +76,47 @@ class AgendaService
         return ['message' => 'Horario eliminado correctamente'];
     }
 
+    /**
+     * Crear un horario específico para una fecha (copia de un horario base)
+     */
+    public function crearHorarioEspecifico($horarioBaseId, $fecha, $data = [])
+    {
+        $horarioBase = Horario::findOrFail($horarioBaseId);
+        
+        // Verificar si ya existe un horario específico para esta fecha
+        $horarioExistente = Horario::where('agenda_id', $horarioBase->agenda_id)
+            ->where('fecha', $fecha)
+            ->where('hora_inicio', $horarioBase->hora_inicio)
+            ->where('hora_fin', $horarioBase->hora_fin)
+            ->first();
+
+        if ($horarioExistente) {
+            // Si existe, actualizar con los nuevos datos
+            $horarioExistente->update(array_merge([
+                'titulo' => $horarioBase->titulo,
+                'color' => $horarioBase->color,
+                'notas' => $horarioBase->notas,
+                'activo' => $horarioBase->activo
+            ], $data));
+            return $horarioExistente;
+        }
+
+        // Crear nuevo horario específico
+        $horarioEspecifico = Horario::create([
+            'agenda_id' => $horarioBase->agenda_id,
+            'titulo' => $data['titulo'] ?? $horarioBase->titulo,
+            'hora_inicio' => $data['hora_inicio'] ?? $horarioBase->hora_inicio,
+            'hora_fin' => $data['hora_fin'] ?? $horarioBase->hora_fin,
+            'dia_semana' => $horarioBase->dia_semana,
+            'fecha' => $fecha,
+            'color' => $data['color'] ?? $horarioBase->color,
+            'notas' => $data['notas'] ?? $horarioBase->notas,
+            'activo' => $data['activo'] ?? $horarioBase->activo
+        ]);
+
+        return $horarioEspecifico;
+    }
+
     public function obtenerHorariosPorAgenda($agendaId)
     {
         return Horario::select(['id','agenda_id','titulo','hora_inicio','hora_fin','dia_semana','color','notas','activo'])
@@ -90,6 +131,15 @@ class AgendaService
         if (!$fecha) {
             $fecha = now()->format('Y-m-d');
         }
+        
+        // Validar que la fecha sea válida
+        try {
+            $fechaValidada = \Carbon\Carbon::parse($fecha)->format('Y-m-d');
+        } catch (\Exception $e) {
+            throw new \Exception('Formato de fecha inválido. Use el formato YYYY-MM-DD');
+        }
+        
+        $fecha = $fechaValidada;
 
         // Obtener la agenda con sus horarios activos
         $agenda = Agenda::with(['operador', 'horariosActivos'])
@@ -108,11 +158,24 @@ class AgendaService
         ];
         $diaSemanaEspanol = $diasSemana[$diaSemana] ?? 'lunes';
 
-        // Filtrar horarios para el día específico
-        $horariosDelDia = $agenda->horariosActivos()
-            ->where('dia_semana', $diaSemanaEspanol)
+        // Obtener horarios específicos para esta fecha (si existen)
+        $horariosEspecificos = Horario::where('agenda_id', $agendaId)
+            ->where('activo', true)
+            ->where('fecha', $fecha)
             ->orderBy('hora_inicio')
             ->get();
+
+        // Si hay horarios específicos, usarlos; si no, usar horarios base del día de la semana
+        if ($horariosEspecificos->isNotEmpty()) {
+            $horariosDelDia = $horariosEspecificos;
+        } else {
+            // Filtrar horarios base para el día específico
+            $horariosDelDia = $agenda->horariosActivos()
+                ->where('dia_semana', $diaSemanaEspanol)
+                ->whereNull('fecha') // Solo horarios base
+                ->orderBy('hora_inicio')
+                ->get();
+        }
 
         // Obtener citas existentes para esta agenda y fecha
         $citasDelDia = \App\Http\Modules\Agenda\Models\Cita::where('agenda_id', $agenda->id)
@@ -130,6 +193,7 @@ class AgendaService
                 'color' => $horario->color,
                 'notas' => $horario->notas,
                 'disponible' => !$citaExistente,
+                'es_especifico' => !is_null($horario->fecha), // Indicar si es horario específico
                 'cita_existente' => $citaExistente ? [
                     'id' => $citaExistente->id,
                     'cliente_nombre' => $citaExistente->cliente_nombre,
@@ -176,6 +240,15 @@ class AgendaService
             ->whereMonth('fecha', $mes)
             ->get();
 
+        // Obtener horarios específicos del mes (con fecha específica)
+        $horariosEspecificos = Horario::where('agenda_id', $agendaId)
+            ->where('activo', true)
+            ->whereNotNull('fecha')
+            ->whereYear('fecha', $anio)
+            ->whereMonth('fecha', $mes)
+            ->get()
+            ->groupBy('fecha');
+
         // Generar calendario del mes
         $primerDia = \Carbon\Carbon::create($anio, $mes, 1);
         $ultimoDia = $primerDia->copy()->endOfMonth();
@@ -187,14 +260,26 @@ class AgendaService
         for ($dia = 1; $dia <= $diasEnMes; $dia++) {
             $fecha = \Carbon\Carbon::create($anio, $mes, $dia);
             $diaSemana = $diasSemana[$fecha->dayOfWeek];
+            $fechaString = $fecha->format('Y-m-d');
             
-            // Obtener horarios para este día de la semana
-            $horariosDelDia = $agenda->horariosActivos()
-                ->where('dia_semana', $diaSemana)
-                ->orderBy('hora_inicio')
-                ->get();
+            // Obtener horarios para este día específico
+            $horariosDelDia = collect();
+            
+            // 1. Primero agregar horarios específicos de esta fecha (si existen)
+            if (isset($horariosEspecificos[$fechaString])) {
+                $horariosDelDia = $horariosDelDia->merge($horariosEspecificos[$fechaString]);
+            }
+            
+            // 2. Si no hay horarios específicos, usar horarios base del día de la semana
+            if ($horariosDelDia->isEmpty()) {
+                $horariosDelDia = $agenda->horariosActivos()
+                    ->where('dia_semana', $diaSemana)
+                    ->whereNull('fecha') // Solo horarios base
+                    ->orderBy('hora_inicio')
+                    ->get();
+            }
 
-            // Obtener citas para esta fecha específica (comparación robusta de fecha)
+            // Obtener citas para esta fecha específica
             $citasDelDia = $citas->filter(function($cita) use ($fecha) {
                 $citaFecha = $cita->fecha instanceof \Carbon\Carbon
                     ? $cita->fecha->format('Y-m-d')
@@ -208,7 +293,7 @@ class AgendaService
                 'dia_semana' => $diaSemana,
                 'es_hoy' => $fecha->isToday(),
                 'es_pasado' => $fecha->isPast(),
-                'horarios' => $horariosDelDia->map(function ($horario) use ($citasDelDia) {
+                'horarios' => $horariosDelDia->sortBy('hora_inicio')->map(function ($horario) use ($citasDelDia) {
                     $citaEnHorario = $citasDelDia->where('horario_id', $horario->id)->first();
                     
                     return [
@@ -219,6 +304,7 @@ class AgendaService
                         'color' => $horario->color,
                         'notas' => $horario->notas,
                         'disponible' => !$citaEnHorario,
+                        'es_especifico' => !is_null($horario->fecha), // Indicar si es horario específico
                         'cita' => $citaEnHorario ? [
                             'id' => $citaEnHorario->id,
                             'cliente_nombre' => $citaEnHorario->cliente_nombre,
@@ -290,6 +376,15 @@ class AgendaService
         if (!$fecha) {
             $fecha = now()->format('Y-m-d');
         }
+        
+        // Validar que la fecha sea válida
+        try {
+            $fechaValidada = \Carbon\Carbon::parse($fecha)->format('Y-m-d');
+        } catch (\Exception $e) {
+            throw new \Exception('Formato de fecha inválido. Use el formato YYYY-MM-DD');
+        }
+        
+        $fecha = $fechaValidada;
 
         // Obtener el día de la semana
         $diaSemana = strtolower(now()->parse($fecha)->format('l'));
@@ -317,11 +412,25 @@ class AgendaService
         $disponibilidad = [];
 
         foreach ($agendas as $agenda) {
-            // Obtener horarios para el día específico
-            $horariosDelDia = $agenda->horariosActivos()
-                ->where('dia_semana', $diaSemanaEspanol)
+            // Obtener horarios específicos para esta fecha (si existen)
+            $horariosEspecificos = Horario::where('agenda_id', $agenda->id)
+                ->where('activo', true)
+                ->where('fecha', $fecha)
                 ->orderBy('hora_inicio')
                 ->get();
+
+            // Si hay horarios específicos, usarlos; si no, usar horarios base del día de la semana
+            if ($horariosEspecificos->isNotEmpty()) {
+                $horariosDelDia = $horariosEspecificos;
+            } else {
+                // Obtener horarios base para el día específico
+                $horariosDelDia = $agenda->horariosActivos()
+                    ->where('dia_semana', $diaSemanaEspanol)
+                    ->whereNull('fecha') // Solo horarios base
+                    ->orderBy('hora_inicio')
+                    ->get();
+            }
+
 
             // Obtener citas existentes para esta fecha
             $citasDelDia = \App\Http\Modules\Agenda\Models\Cita::where('agenda_id', $agenda->id)
@@ -339,6 +448,7 @@ class AgendaService
                     'color' => $horario->color,
                     'notas' => $horario->notas,
                     'disponible' => !$citaExistente,
+                    'es_especifico' => !is_null($horario->fecha), // Indicar si es horario específico
                     'cita_existente' => $citaExistente ? [
                         'id' => $citaExistente->id,
                         'cliente_nombre' => $citaExistente->cliente_nombre,

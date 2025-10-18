@@ -14,6 +14,7 @@ Route::prefix('agenda')->group(function () {
         
         // Rutas para horarios
         Route::post('crear-horario', 'crearHorario')->middleware(['permission:crear_horarios']);
+        Route::post('crear-horario-especifico', 'crearHorarioEspecifico')->middleware(['permission:crear_horarios']);
         Route::put('modificar-horario/{id}', 'modificarHorario')->middleware(['permission:editar_horarios']);
         Route::delete('eliminar-horario/{id}', 'eliminarHorario')->middleware(['permission:eliminar_horarios']);
         Route::get('horarios-agenda/{agendaId}', 'obtenerHorariosPorAgenda')->middleware(['permission:ver_horarios']);
