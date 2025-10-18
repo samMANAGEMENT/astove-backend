@@ -96,6 +96,32 @@ class AgendaController extends Controller
         }
     }
 
+    public function crearHorarioEspecifico(Request $request)
+    {
+        try {
+            $request->validate([
+                'horario_base_id' => 'required|exists:horarios,id',
+                'fecha' => 'required|date|after_or_equal:today',
+                'titulo' => 'nullable|string|max:255',
+                'hora_inicio' => 'nullable|date_format:H:i:s',
+                'hora_fin' => 'nullable|date_format:H:i:s|after:hora_inicio',
+                'color' => 'nullable|string|max:7',
+                'notas' => 'nullable|string',
+                'activo' => 'nullable|boolean'
+            ]);
+
+            $horario = $this->agendaService->crearHorarioEspecifico(
+                $request->horario_base_id,
+                $request->fecha,
+                $request->only(['titulo', 'hora_inicio', 'hora_fin', 'color', 'notas', 'activo'])
+            );
+            
+            return response()->json($horario, 201);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
+
     public function obtenerHorariosPorAgenda($agendaId)
     {
         try {

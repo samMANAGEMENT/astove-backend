@@ -15,6 +15,7 @@ class Horario extends Model
         'hora_inicio',
         'hora_fin',
         'dia_semana',
+        'fecha',
         'color',
         'notas',
         'activo'
@@ -32,5 +33,37 @@ class Horario extends Model
     public function citas()
     {
         return $this->hasMany(Cita::class);
+    }
+
+    /**
+     * Scope para obtener horarios base (sin fecha específica)
+     */
+    public function scopeBase($query)
+    {
+        return $query->whereNull('fecha');
+    }
+
+    /**
+     * Scope para obtener horarios específicos de una fecha
+     */
+    public function scopeEspecificos($query, $fecha)
+    {
+        return $query->where('fecha', $fecha);
+    }
+
+    /**
+     * Verificar si es un horario base (recurrente)
+     */
+    public function esBase()
+    {
+        return is_null($this->fecha);
+    }
+
+    /**
+     * Verificar si es un horario específico de una fecha
+     */
+    public function esEspecifico()
+    {
+        return !is_null($this->fecha);
     }
 }
