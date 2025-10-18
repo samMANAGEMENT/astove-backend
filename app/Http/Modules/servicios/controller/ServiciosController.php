@@ -93,9 +93,25 @@ class ServiciosController extends Controller
             $perPage = $request->get('per_page', 10);
             $search = $request->get('search', '');
             $empleadoId = $request->get('empleado_id');
+            $fechaDesde = $request->get('fecha_desde');
+            $fechaHasta = $request->get('fecha_hasta');
+            $metodoPago = $request->get('metodo_pago');
+            $precioMinimo = $request->get('precio_minimo');
+            $precioMaximo = $request->get('precio_maximo');
             $entidadId = auth()->user()->obtenerEntidadId();
             
-            $servicio = $this->serviciosService->listarServiciosRealizados($page, $perPage, $search, $empleadoId, $entidadId);
+            $servicio = $this->serviciosService->listarServiciosRealizados(
+                $page, 
+                $perPage, 
+                $search, 
+                $empleadoId, 
+                $entidadId,
+                $fechaDesde,
+                $fechaHasta,
+                $metodoPago,
+                $precioMinimo,
+                $precioMaximo
+            );
             return response()->json($servicio, 200);
         } catch (\Throwable $th) {
             return response()->json($th->getMessage(), 500);
